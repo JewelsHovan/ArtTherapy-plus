@@ -2,20 +2,40 @@
 
 A web application for art therapy focusing on pain management through creative expression. The app features AI-powered image generation and reflection tools.
 
+## 🚀 Deployment Options
+
+### Cloudflare (Recommended)
+Deploy to Cloudflare's edge network for global performance:
+```bash
+./deploy.sh
+```
+See [Cloudflare Deployment Guide](docs/cloudflare-deployment.md) for detailed instructions.
+
+### Local Development
+Run both servers locally:
+```bash
+./start.sh
+```
+
 ## Project Structure
 
 ```
 .
-├── backend/           # Flask backend API
-│   ├── app.py        # Main Flask application
+├── backend/              # Flask backend API (local dev)
+│   ├── app.py           # Main Flask application
 │   └── requirements.txt
-├── frontend/         # React frontend with Vite
+├── cloudflare-worker/    # Cloudflare Worker backend
+│   ├── src/index.js     # Worker API implementation
+│   └── wrangler.toml    # Cloudflare configuration
+├── frontend/            # React frontend with Vite
 │   ├── src/
-│   │   ├── components/   # Reusable UI components
+│   │   ├── components/  # Reusable UI components
 │   │   ├── pages/       # Page components
-│   │   └── ...
+│   │   └── services/    # API integration
 │   └── package.json
-└── start.sh         # Script to run both servers
+├── docs/                # Documentation
+├── deploy.sh           # Cloudflare deployment script
+└── start.sh           # Local development script
 ```
 
 ## Quick Start

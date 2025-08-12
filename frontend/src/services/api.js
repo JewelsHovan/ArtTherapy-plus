@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Using relative URL since we have Vite proxy configured
-const API_BASE_URL = '/api';
+// Determine API URL based on environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? 'https://arttherapy-plus-api.julienh15.workers.dev/api'
+    : 'http://localhost:8787/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,

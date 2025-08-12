@@ -44,6 +44,7 @@ Thumbs.db
 *.launch
 .settings/
 *.sublime-workspace
+.claude/
 
 # Python
 __pycache__/
@@ -76,6 +77,10 @@ pip-delete-this-directory.txt
 *.pid
 *.seed
 *.pid.lock
+
+# Cloudflare
+.wrangler/
+.dev.vars
 
 # Debug
 npm-debug.log*

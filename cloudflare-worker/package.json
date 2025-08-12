@@ -1,0 +1,17 @@
+{
+  "name": "arttherapy-plus-api",
+  "version": "1.0.0",
+  "description": "Art Therapy Plus API on Cloudflare Workers",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "openai": "^4.58.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.29.0"
+  }
+}

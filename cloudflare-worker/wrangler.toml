@@ -1,0 +1,15 @@
+name = "arttherapy-plus-api"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+[vars]
+# Add your environment variables here
+
+# Uncomment to use KV namespace for storage
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "your-kv-namespace-id"
+
+# Configure CORS
+[env.production.vars]
+ALLOWED_ORIGINS = "https://arttherapy-plus.pages.dev,http://localhost:5173"

@@ -66,45 +66,49 @@ const PainDescription = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
-      <div className="mb-16">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <div className="mb-12">
         <Logo />
       </div>
       
-      <div className="mb-12 w-full max-w-2xl">
-        <TextInput
-          value={painDescription}
-          onChange={(e) => {
-            setPainDescription(e.target.value);
-            setError('');
-          }}
-          placeholder="Describe your pain"
-          className="w-full"
-        />
+      <div className="w-full max-w-lg flex flex-col items-center">
+        <div className="mb-8 w-full">
+          <TextInput
+            value={painDescription}
+            onChange={(e) => {
+              setPainDescription(e.target.value);
+              setError('');
+            }}
+            placeholder="Describe your pain"
+            className="w-full text-center"
+          />
+          
+          {error && (
+            <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+          )}
+        </div>
         
-        {error && (
-          <p className="text-red-500 text-sm mt-2">{error}</p>
-        )}
-      </div>
-      
-      <div className="flex gap-8">
-        <Button 
-          variant="primary" 
-          size="medium"
-          onClick={handlePrompt}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Generating...' : 'Prompt'}
-        </Button>
-        
-        <Button 
-          variant="primary" 
-          size="medium"
-          onClick={handleVisualize}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Creating...' : 'Visualize'}
-        </Button>
+        <div className="flex gap-6">
+          <Button 
+            variant="primary" 
+            size="medium"
+            onClick={handlePrompt}
+            disabled={isLoading}
+            className="px-8 py-3"
+          >
+            {isLoading ? 'Generating...' : 'Prompt'}
+          </Button>
+          
+          <Button 
+            variant="primary" 
+            size="medium"
+            onClick={handleVisualize}
+            disabled={isLoading}
+            className="px-8 py-3"
+          >
+            {isLoading ? 'Creating...' : 'Visualize'}
+          </Button>
+        </div>
       </div>
 
       {/* Display prompts if generated */}

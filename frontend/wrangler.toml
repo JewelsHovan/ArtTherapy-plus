@@ -1,0 +1,10 @@
+name = "arttherapy-plus"
+compatibility_date = "2024-12-01"
+
+[site]
+bucket = "./dist"
+
+[env.production]
+routes = [
+  { pattern = "arttherapy-plus.pages.dev", custom_domain = false }
+]
