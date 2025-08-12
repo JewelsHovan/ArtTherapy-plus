@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+node_modules_old/
+.pnp
+.pnp.js
+
+# Production
+/build
+/dist
+frontend/dist
+
+# Testing
+/coverage
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+.eggs/
+
+# Package manager lock files (optional - uncomment if you want to track them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+.parcel-cache
+
+# Build files
+*.pid
+*.seed
+*.pid.lock
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
