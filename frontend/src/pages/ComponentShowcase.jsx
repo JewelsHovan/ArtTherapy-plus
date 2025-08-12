@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Logo from '../components/common/Logo';
 import Button from '../components/common/Button';
 import TextInput from '../components/forms/TextInput';
+import Header from '../components/layout/Header';
 
 const ComponentShowcase = () => {
   const [inputValue, setInputValue] = useState('');
@@ -11,6 +12,13 @@ const ComponentShowcase = () => {
       <h1 className="text-4xl font-bold mb-8 text-primary">Component Showcase</h1>
       
       <div className="space-y-12">
+        <section>
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">Header Navigation</h2>
+          <div className="bg-gray-50 p-8 rounded-lg">
+            <p className="text-sm text-gray-600 mb-4">The header navigation appears in the top-right corner on all main pages (see top-right of this page).</p>
+            <p className="text-sm text-gray-600">Features: Profile, Settings, Home, and Create links in a dropdown menu.</p>
+          </div>
+        </section>
         <section>
           <h2 className="text-2xl font-semibold mb-4 text-gray-700">Logo Component</h2>
           <div className="bg-gray-50 p-8 rounded-lg">

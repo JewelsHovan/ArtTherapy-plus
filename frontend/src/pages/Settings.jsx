@@ -68,46 +68,30 @@ const Settings = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
-        {/* Header with Profile */}
-        <div className="flex justify-between items-start mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gray-300 rounded-full overflow-hidden">
-              <img 
-                src="https://via.placeholder.com/80" 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">Hello, [Username]!</h2>
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-blue-500">✓</span>
-                  <span>Verified with Third-Party Authentication</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-yellow-500">🏆</span>
-                  <span>First Spark</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-blue-600">
-                  <span className="text-yellow-500">🏆</span>
-                  <span>Congrats on completing your first creative session!</span>
-                </div>
+      <div className="flex-1 p-8 pt-20">
+        {/* User Info Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Account Settings</h2>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-300 rounded-full overflow-hidden">
+                <img 
+                  src="https://via.placeholder.com/64" 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
               </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-medium">Username</h3>
+                <p className="text-sm text-gray-600">Verified Account</p>
+              </div>
+              <button 
+                onClick={() => navigate('/profile')}
+                className="text-blue-600 hover:underline text-sm"
+              >
+                Edit profile
+              </button>
             </div>
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <button 
-              onClick={() => navigate('/profile')}
-              className="text-blue-600 hover:underline text-sm"
-            >
-              Edit profile
-            </button>
-            <button className="text-blue-600 hover:underline text-sm">
-              Export data to care provider
-            </button>
           </div>
         </div>
 

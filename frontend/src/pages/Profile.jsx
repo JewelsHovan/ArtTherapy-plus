@@ -26,41 +26,32 @@ const Profile = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
-        {/* Header with Profile */}
-        <div className="flex justify-between items-start mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gray-300 rounded-full overflow-hidden">
-              <img 
-                src="https://via.placeholder.com/80" 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">Hello, [Username]!</h2>
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-blue-500">✓</span>
-                  <span>Verified with Third-Party Authentication</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-yellow-500">🏆</span>
-                  <span>First Spark</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-blue-600">
-                  <span>Congrats on completing your first creative session!</span>
+      <div className="flex-1 p-8 pt-20">
+        {/* Profile Header */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">My Profile</h2>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gray-300 rounded-full overflow-hidden">
+                <img 
+                  src="https://via.placeholder.com/64" 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-medium">Username</h3>
+                <div className="flex items-center gap-4 mt-1">
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-blue-500">✓</span> Verified
+                  </span>
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-yellow-500">🏆</span> First Spark
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-          
-          <button 
-            onClick={() => navigate('/settings')}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            Settings
-          </button>
         </div>
 
         {/* Search and Filter */}
