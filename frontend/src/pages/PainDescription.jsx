@@ -66,13 +66,13 @@ const PainDescription = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex flex-col items-center justify-center px-4">
       <div className="mb-12">
         <Logo />
       </div>
       
-      <div className="w-full max-w-lg flex flex-col items-center">
-        <div className="mb-8 w-full">
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        <div className="mb-10 w-full">
           <TextInput
             value={painDescription}
             onChange={(e) => {
@@ -80,21 +80,22 @@ const PainDescription = () => {
               setError('');
             }}
             placeholder="Describe your pain"
-            className="w-full text-center"
+            fullWidth
+            className="text-center text-xl"
           />
           
           {error && (
-            <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+            <p className="text-red-500 text-sm mt-3 text-center">{error}</p>
           )}
         </div>
         
-        <div className="flex gap-6">
+        <div className="flex gap-8">
           <Button 
             variant="primary" 
             size="medium"
             onClick={handlePrompt}
             disabled={isLoading}
-            className="px-8 py-3"
+            className="min-w-[140px]"
           >
             {isLoading ? 'Generating...' : 'Prompt'}
           </Button>
@@ -104,7 +105,7 @@ const PainDescription = () => {
             size="medium"
             onClick={handleVisualize}
             disabled={isLoading}
-            className="px-8 py-3"
+            className="min-w-[140px]"
           >
             {isLoading ? 'Creating...' : 'Visualize'}
           </Button>

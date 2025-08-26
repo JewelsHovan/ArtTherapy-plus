@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Registration from './pages/Registration';
 import Visualize from './pages/Visualize';
 import About from './pages/About';
+import Gallery from './pages/Gallery';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/mode" element={<ModeSelection />} />
           <Route path="/describe" element={<PainDescription />} />
           <Route path="/visualize" element={<Visualize />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/componentshowcase" element={<ComponentShowcase />} />

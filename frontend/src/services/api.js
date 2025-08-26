@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// Determine API URL based on environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://arttherapy-plus-api.julienh15.workers.dev/api'
-    : 'http://localhost:8787/api');
+// Use Cloudflare Worker API endpoint
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://arttherapy-plus-api.julienh15.workers.dev/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

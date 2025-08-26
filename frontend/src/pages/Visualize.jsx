@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '../components/common/Logo';
 import Button from '../components/common/Button';
 import { painPlusAPI } from '../services/api';
+import { galleryStorage } from '../utils/storage';
 
 const Visualize = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const Visualize = () => {
   const [reflectionQuestions, setReflectionQuestions] = useState([]);
   const [showReflection, setShowReflection] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (!imageUrl) {
@@ -43,6 +45,21 @@ const Visualize = () => {
     window.open(imageUrl, '_blank');
   };
 
+  const handleSaveToGallery = () => {
+    const saved = galleryStorage.save({
+      imageUrl,
+      description,
+      promptUsed
+    });
+    if (saved) {
+      setIsSaved(true);
+    }
+  };
+
+  const handleViewGallery = () => {
+    navigate('/gallery');
+  };
+
   if (!imageUrl) {
     return null;
   }
@@ -54,6 +71,13 @@ const Visualize = () => {
         <div className="flex justify-between items-center mb-8">
           <Logo />
           <div className="flex gap-4">
+            <Button 
+              variant="outline" 
+              size="small"
+              onClick={handleViewGallery}
+            >
+              Gallery
+            </Button>
             <Button 
               variant="outline" 
               size="small"
@@ -106,8 +130,23 @@ const Visualize = () => {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-semibold text-primary mb-4">What would you like to do?</h3>
               <div className="space-y-3">
+                {!isSaved && (
+                  <Button 
+                    variant="primary" 
+                    size="medium"
+                    onClick={handleSaveToGallery}
+                    className="w-full"
+                  >
+                    Save to Gallery
+                  </Button>
+                )}
+                {isSaved && (
+                  <div className="bg-green-50 text-green-700 p-3 rounded-lg text-center">
+                    ✓ Saved to Gallery
+                  </div>
+                )}
                 <Button 
-                  variant="primary" 
+                  variant={isSaved ? "primary" : "secondary"}
                   size="medium"
                   onClick={handleReflect}
                   disabled={isLoading}
@@ -122,6 +161,14 @@ const Visualize = () => {
                   className="w-full"
                 >
                   Create New Artwork
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="medium"
+                  onClick={handleViewGallery}
+                  className="w-full"
+                >
+                  View Gallery
                 </Button>
               </div>
             </div>

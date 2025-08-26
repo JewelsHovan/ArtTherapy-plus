@@ -14,26 +14,27 @@ const ModeSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex flex-col items-center justify-center px-4">
       <div className="mb-12">
         <Logo />
       </div>
       
-      <div className="flex flex-col items-center space-y-6 w-full max-w-md">
+      <div className="flex flex-col items-center gap-6 w-full max-w-lg">
         <Button 
           variant="primary" 
           size="large"
           onClick={handleCreateOriginal}
-          className="w-full text-lg py-4"
+          fullWidth
+          className="text-xl"
         >
           Create Original Work
         </Button>
         
         <Button 
-          variant="primary" 
+          variant="secondary" 
           size="medium"
           onClick={handleInspireMe}
-          className="px-12 py-3"
+          className="px-16"
         >
           Inspire Me
         </Button>
