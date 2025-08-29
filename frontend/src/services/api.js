@@ -42,7 +42,16 @@ export const painPlusAPI = {
   getInspiration: async () => {
     const response = await api.get('/inspire');
     return response.data;
+  },
+
+  // Edit/transform image based on pain description
+  editImage: async ({ image, description }) => {
+    const response = await api.post('/edit/image', { 
+      image, 
+      description 
+    });
+    return response.data;
   }
 };
 
-export default api;
+export default painPlusAPI;

@@ -214,6 +214,98 @@ export default {
         );
       }
 
+      if (path === '/api/edit/image' && request.method === 'POST') {
+        const data = await request.json();
+        const imageBase64 = data.image;
+        const painDescription = data.description || data.prompt || '';
+
+        if (!imageBase64 || !painDescription) {
+          return new Response(
+            JSON.stringify({ error: 'Image and pain description are required' }),
+            {
+              status: 400,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders,
+              },
+            }
+          );
+        }
+
+        try {
+          // First, analyze the uploaded image to understand its style
+          const visionResponse = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Analyze this artwork/image and describe its artistic style, color palette, composition, medium, and overall aesthetic in detail. Focus on the visual characteristics that define its unique style.',
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: imageBase64,
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 300,
+          });
+
+          const styleAnalysis = visionResponse.choices[0].message.content;
+
+          // Create a prompt that combines the style analysis with the pain description
+          const combinedPrompt = `Create an art therapy piece that expresses: "${painDescription}"
+          
+          IMPORTANT - Match this exact artistic style: ${styleAnalysis}
+          
+          The artwork should:
+          - Maintain the same artistic technique, medium appearance, and color palette as described
+          - Express the pain experience through symbolic elements, textures, and composition
+          - Create a therapeutic transformation that acknowledges the pain while suggesting healing
+          - Use abstract or figurative elements that represent the physical and emotional sensation
+          - Keep the overall aesthetic consistent with the original style analysis
+          
+          Style: Art therapy piece in the exact style described above, expressing pain through artistic transformation.`;
+
+          // Generate new image with DALL-E 3 based on combined prompt
+          const imageResponse = await openai.images.generate({
+            model: 'dall-e-3',
+            prompt: combinedPrompt,
+            size: '1024x1024',
+            quality: 'standard',
+            n: 1,
+          });
+
+          const generatedImageUrl = imageResponse.data[0].url;
+          const revisedPrompt = imageResponse.data[0].revised_prompt || combinedPrompt;
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              edited_image_url: generatedImageUrl,
+              prompt_used: revisedPrompt,
+              original_description: painDescription,
+              style_analysis: styleAnalysis,
+              model_used: 'dall-e-3-with-vision',
+            }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders,
+              },
+            }
+          );
+        } catch (error) {
+          console.error('Image transformation error:', error);
+          throw error;
+        }
+      }
+
       // 404 for unmatched routes
       return new Response(
         JSON.stringify({ error: 'Not found' }),

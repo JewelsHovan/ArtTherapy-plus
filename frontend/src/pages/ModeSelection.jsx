@@ -9,6 +9,10 @@ const ModeSelection = () => {
     navigate('/describe');
   };
 
+  const handleTransformImage = () => {
+    navigate('/edit');
+  };
+
   const handleInspireMe = () => {
     navigate('/inspire');
   };
@@ -19,6 +23,11 @@ const ModeSelection = () => {
         <Logo />
       </div>
       
+      <h1 className="text-3xl font-bold text-gray-800 mb-4">Choose Your Creative Path</h1>
+      <p className="text-gray-600 text-center mb-8 max-w-md">
+        Express your pain through art in the way that feels right for you
+      </p>
+      
       <div className="flex flex-col items-center gap-6 w-full max-w-lg">
         <Button 
           variant="primary" 
@@ -27,7 +36,17 @@ const ModeSelection = () => {
           fullWidth
           className="text-xl"
         >
-          Create Original Work
+          Create Original Art
+        </Button>
+        
+        <Button 
+          variant="primary" 
+          size="large"
+          onClick={handleTransformImage}
+          fullWidth
+          className="text-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+        >
+          Transform Your Image
         </Button>
         
         <Button 
@@ -38,6 +57,15 @@ const ModeSelection = () => {
         >
           Inspire Me
         </Button>
+      </div>
+      
+      <div className="mt-12 text-center">
+        <button
+          onClick={() => navigate('/gallery')}
+          className="text-purple-600 hover:text-purple-800 font-medium"
+        >
+          View Your Gallery →
+        </button>
       </div>
     </div>
   );
