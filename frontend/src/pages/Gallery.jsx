@@ -44,55 +44,59 @@ const Gallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <Logo />
-          <div className="flex gap-4">
-            <Button 
-              variant="outline" 
-              size="small"
-              onClick={() => navigate('/visualize')}
-            >
-              Back
-            </Button>
-            <Button 
-              variant="primary" 
-              size="small"
-              onClick={() => navigate('/describe')}
-            >
-              Create New
-            </Button>
+        <div className="card-glass mb-8 animate-fadeIn">
+          <div className="flex justify-between items-center">
+            <Logo />
+            <div className="flex gap-4">
+              <button
+                onClick={() => navigate('/mode')}
+                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg
+                  hover:bg-white/30 transition-all duration-300 font-medium"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => navigate('/mode')}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg
+                  hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg"
+              >
+                Create New
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Your Art Gallery</h1>
+        <div className="card-glass mb-8 animate-fadeIn delay-150">
+          <h1 className="text-3xl font-bold gradient-text mb-2">Your Art Gallery</h1>
           <p className="text-gray-600">Click on any artwork to see your pain description transform into art</p>
         </div>
 
         {galleryItems.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+          <div className="card-glass p-12 text-center animate-fadeIn delay-300">
             <div className="max-w-md mx-auto">
               <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <h2 className="text-xl font-semibold text-gray-700 mb-2">No Artwork Yet</h2>
               <p className="text-gray-500 mb-6">Start creating your visual pain journey</p>
-              <Button 
-                variant="primary"
-                onClick={() => navigate('/describe')}
+              <button
+                onClick={() => navigate('/mode')}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg
+                  hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg"
               >
                 Create Your First Artwork
-              </Button>
+              </button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {galleryItems.map((item) => (
+            {galleryItems.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+                className="glass rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group animate-fadeIn"
+                style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handleImageClick(item)}
               >
                 <div className="relative aspect-square">
