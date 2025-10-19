@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../components/common/Logo';
-import Button from '../components/common/Button';
 import ImageModal from '../components/modals/ImageModal';
 import { galleryStorage } from '../utils/storage';
 
@@ -46,21 +44,25 @@ const Gallery = () => {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="card-glass mb-8 animate-fadeIn">
+        {/* Combined Header Card */}
+        <div className="card-clean mb-8 animate-fadeIn">
           <div className="flex justify-between items-center">
-            <Logo />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Art Gallery</h1>
+              <p className="text-gray-600">Click on any artwork to see your pain description transform into art</p>
+            </div>
             <div className="flex gap-4">
               <button
-                onClick={() => navigate('/mode')}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg
-                  hover:bg-white/30 transition-all duration-300 font-medium"
+                onClick={() => navigate('/')}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg
+                  hover:bg-gray-200 transition-all duration-300 font-medium"
               >
                 ← Back
               </button>
               <button
                 onClick={() => navigate('/mode')}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg
-                  hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg"
+                className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg
+                  hover:bg-[#2563EB] transition-all duration-300 font-medium shadow-md"
               >
                 Create New
               </button>
@@ -68,13 +70,9 @@ const Gallery = () => {
           </div>
         </div>
 
-        <div className="card-glass mb-8 animate-fadeIn delay-150">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Your Art Gallery</h1>
-          <p className="text-gray-600">Click on any artwork to see your pain description transform into art</p>
-        </div>
-
+        {/* Gallery Grid */}
         {galleryItems.length === 0 ? (
-          <div className="card-glass p-12 text-center animate-fadeIn delay-300">
+          <div className="card-clean p-12 text-center animate-fadeIn" style={{ animationDelay: '150ms' }}>
             <div className="max-w-md mx-auto">
               <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -83,8 +81,8 @@ const Gallery = () => {
               <p className="text-gray-500 mb-6">Start creating your visual pain journey</p>
               <button
                 onClick={() => navigate('/mode')}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg
-                  hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg"
+                className="px-6 py-3 bg-[#F59E0B] text-white rounded-lg
+                  hover:bg-[#D97706] transition-all duration-300 font-medium shadow-md"
               >
                 Create Your First Artwork
               </button>
@@ -95,8 +93,8 @@ const Gallery = () => {
             {galleryItems.map((item, index) => (
               <div
                 key={item.id}
-                className="glass rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group animate-fadeIn"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="bg-white rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl group animate-fadeIn"
+                style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
                 onClick={() => handleImageClick(item)}
               >
                 <div className="relative aspect-square">
@@ -105,7 +103,7 @@ const Gallery = () => {
                     alt="Generated artwork"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                       <p className="text-sm font-medium line-clamp-2">{item.description}</p>
                     </div>
@@ -120,7 +118,7 @@ const Gallery = () => {
                     </svg>
                   </button>
                 </div>
-                <div className="p-4">
+                <div className="p-4 bg-white">
                   <p className="text-sm text-gray-500">{formatDate(item.timestamp)}</p>
                 </div>
               </div>
@@ -130,7 +128,7 @@ const Gallery = () => {
 
         {galleryItems.length > 0 && (
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               {galleryItems.length} {galleryItems.length === 1 ? 'artwork' : 'artworks'} in your gallery
             </p>
           </div>

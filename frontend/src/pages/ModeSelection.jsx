@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/common/Logo';
-import Button from '../components/common/Button';
 
 const ModeSelection = () => {
   const navigate = useNavigate();
@@ -19,8 +18,8 @@ const ModeSelection = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      {/* Glass card container */}
-      <div className="card-glass max-w-2xl w-full animate-fadeIn">
+      {/* Clean card container */}
+      <div className="card-clean max-w-2xl w-full animate-fadeIn">
         <div className="text-center mb-8">
           <div className="mb-8">
             <Logo />
@@ -35,12 +34,12 @@ const ModeSelection = () => {
         </div>
         
         <div className="flex flex-col items-center gap-4 w-full">
-          {/* Create Original Art Button */}
+          {/* Create Original Art Button - Primary Blue */}
           <button
             onClick={handleCreateOriginal}
-            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold text-lg
-              hover:from-indigo-600 hover:to-purple-700 transform hover:-translate-y-1 transition-all duration-300
-              shadow-lg hover:shadow-xl"
+            className="w-full py-4 px-6 bg-[#3B82F6] text-white rounded-xl font-semibold text-lg
+              hover:bg-[#2563EB] transform hover:-translate-y-1 transition-all duration-300
+              shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,12 +50,12 @@ const ModeSelection = () => {
             </span>
           </button>
           
-          {/* Transform Your Image Button */}
+          {/* Transform Your Image Button - Secondary Orange */}
           <button
             onClick={handleTransformImage}
-            className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg
-              hover:from-purple-700 hover:to-pink-700 transform hover:-translate-y-1 transition-all duration-300
-              shadow-lg hover:shadow-xl"
+            className="w-full py-4 px-6 bg-[#F59E0B] text-white rounded-xl font-semibold text-lg
+              hover:bg-[#D97706] transform hover:-translate-y-1 transition-all duration-300
+              shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,12 +66,13 @@ const ModeSelection = () => {
             </span>
           </button>
           
-          {/* Inspire Me Button */}
+          {/* Inspire Me Button - Outline Style */}
           <button
             onClick={handleInspireMe}
-            className="w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-semibold text-lg
-              hover:from-orange-600 hover:to-red-700 transform hover:-translate-y-1 transition-all duration-300
-              shadow-lg hover:shadow-xl"
+            className="w-full py-4 px-6 bg-transparent text-[#3B82F6] border-2 border-[#3B82F6] 
+              rounded-xl font-semibold text-lg hover:bg-[#3B82F6] hover:text-white
+              transform hover:-translate-y-1 transition-all duration-300
+              shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,8 +88,8 @@ const ModeSelection = () => {
         <div className="mt-8 text-center">
           <button
             onClick={() => navigate('/gallery')}
-            className="text-white bg-white/20 backdrop-blur-sm px-6 py-2 rounded-full
-              hover:bg-white/30 transition-all duration-300 font-medium"
+            className="text-gray-600 hover:text-gray-800 px-6 py-2 rounded-full
+              transition-all duration-300 font-medium hover:bg-gray-100"
           >
             View Your Gallery →
           </button>

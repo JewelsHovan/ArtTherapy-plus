@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/common/Logo';
-import Button from '../components/common/Button';
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -15,7 +14,7 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="card-glass max-w-xl w-full animate-fadeIn text-center py-12">
+      <div className="card-clean max-w-xl w-full animate-fadeIn text-center py-12">
         <div className="mb-12">
           <Logo />
         </div>
@@ -30,9 +29,9 @@ const Welcome = () => {
         <div className="flex flex-col items-center gap-4 w-full px-8">
           <button
             onClick={handleGenerate}
-            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold text-lg
-              hover:from-indigo-600 hover:to-purple-700 transform hover:-translate-y-1 transition-all duration-300
-              shadow-lg hover:shadow-xl"
+            className="w-full py-4 px-6 bg-[#3B82F6] text-white rounded-xl font-semibold text-lg
+              hover:bg-[#2563EB] transform hover:-translate-y-1 transition-all duration-300
+              shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,9 +44,9 @@ const Welcome = () => {
           
           <button
             onClick={handleReflect}
-            className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg
-              hover:from-purple-700 hover:to-pink-700 transform hover:-translate-y-1 transition-all duration-300
-              shadow-lg hover:shadow-xl"
+            className="w-full py-4 px-6 bg-[#F59E0B] text-white rounded-xl font-semibold text-lg
+              hover:bg-[#D97706] transform hover:-translate-y-1 transition-all duration-300
+              shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +58,7 @@ const Welcome = () => {
           </button>
         </div>
         
-        <div className="mt-10 text-sm text-gray-500">
+        <div className="mt-10 text-sm text-gray-400">
           <p>Your safe space for healing through art</p>
         </div>
       </div>
