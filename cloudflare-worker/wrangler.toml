@@ -2,13 +2,21 @@ name = "arttherapy-plus-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 
-[vars]
-# Add your environment variables here
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "arttherapy-plus-db"
+database_id = "87e9664f-3f72-4dce-aab9-b330c72b7471"
 
-# Uncomment to use KV namespace for storage
-# [[kv_namespaces]]
-# binding = "KV"
-# id = "your-kv-namespace-id"
+# Public environment variables
+[vars]
+MICROSOFT_CLIENT_ID = "PLACEHOLDER_MICROSOFT_CLIENT_ID"
+MICROSOFT_TENANT_ID = "common"
+
+# Secrets (set via: wrangler secret put SECRET_NAME)
+# - MICROSOFT_CLIENT_SECRET
+# - JWT_SECRET
+# - OPENAI_API_KEY
 
 # Configure CORS
 [env.production.vars]
