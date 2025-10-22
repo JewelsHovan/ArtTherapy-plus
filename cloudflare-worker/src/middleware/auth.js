@@ -24,7 +24,7 @@ export async function verifyAuth(request, env) {
     // Verify JWT signature and expiration
     const payload = await verifyJWT(token, env.JWT_SECRET);
 
-    if (!payload.userId) {
+    if (!payload.userId || typeof payload.userId !== 'string') {
       return {
         valid: false,
         error: 'Invalid token payload',
@@ -34,7 +34,7 @@ export async function verifyAuth(request, env) {
 
     // Query D1 for user
     const user = await env.DB
-      .prepare('SELECT * FROM users WHERE id = ?')
+      .prepare('SELECT id, microsoft_id, email, name, avatar_url FROM users WHERE id = ?')
       .bind(payload.userId)
       .first();
 
