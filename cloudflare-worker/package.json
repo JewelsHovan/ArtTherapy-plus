@@ -9,6 +9,7 @@
     "tail": "wrangler tail"
   },
   "dependencies": {
+    "jose": "^6.1.0",
     "openai": "^4.58.0"
   },
   "devDependencies": {
