@@ -3,7 +3,7 @@
 -- Created: 2025-10-20
 
 -- Users table (core authentication + profile)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,                    -- UUID v4
   microsoft_id TEXT UNIQUE NOT NULL,      -- Microsoft OAuth user ID
   email TEXT UNIQUE NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE users (
 );
 
 -- Gallery items (migrated from localStorage)
-CREATE TABLE gallery_items (
+CREATE TABLE IF NOT EXISTS gallery_items (
   id TEXT PRIMARY KEY,                    -- UUID v4
   user_id TEXT NOT NULL,
   image_url TEXT NOT NULL,                -- DALL-E generated image URL
@@ -45,7 +45,7 @@ CREATE TABLE gallery_items (
 );
 
 -- Journal/reflection entries
-CREATE TABLE journal_entries (
+CREATE TABLE IF NOT EXISTS journal_entries (
   id TEXT PRIMARY KEY,                    -- UUID v4
   user_id TEXT NOT NULL,
   gallery_item_id TEXT,                   -- Optional link to artwork
@@ -62,7 +62,7 @@ CREATE TABLE journal_entries (
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_gallery_user_created ON gallery_items(user_id, created_at DESC);
-CREATE INDEX idx_journal_user_created ON journal_entries(user_id, created_at DESC);
-CREATE INDEX idx_users_microsoft_id ON users(microsoft_id);
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_gallery_user_created ON gallery_items(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_journal_user_created ON journal_entries(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_microsoft_id ON users(microsoft_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
