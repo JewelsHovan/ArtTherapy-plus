@@ -1,5 +1,6 @@
 import { generateJWT } from '../utils/jwt.js';
 import { jsonResponse, errorResponse } from '../utils/response.js';
+import { hashPassword, verifyPassword } from '../utils/password.js';
 
 /**
  * Handle Microsoft OAuth callback
@@ -162,6 +163,151 @@ export async function handleVerifyToken(request, env) {
   } catch (error) {
     console.error('Token verification error:', error);
     return errorResponse('Token verification failed', 'INVALID_TOKEN', 401);
+  }
+}
+
+/**
+ * Handle email/password signup
+ * POST /api/auth/signup
+ * Body: { email, password, name }
+ */
+export async function handleSignup(request, env) {
+  try {
+    const { email, password, name } = await request.json();
+
+    // Validation
+    if (!email || !password) {
+      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400);
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return errorResponse('Invalid email address', 'INVALID_EMAIL', 400);
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return errorResponse('Password must be at least 8 characters', 'WEAK_PASSWORD', 400);
+    }
+
+    // Check if email already exists
+    const existingUser = await env.DB
+      .prepare('SELECT id FROM users WHERE email = ?')
+      .bind(email.toLowerCase())
+      .first();
+
+    if (existingUser) {
+      return errorResponse('An account with this email already exists', 'EMAIL_EXISTS', 409);
+    }
+
+    // Hash password
+    const { hash, salt } = await hashPassword(password);
+
+    // Generate user ID
+    const userId = crypto.randomUUID();
+
+    // Insert user into database
+    await env.DB
+      .prepare(`
+        INSERT INTO users (id, email, name, password_hash, password_salt, auth_provider, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 'email', datetime('now'), datetime('now'))
+      `)
+      .bind(userId, email.toLowerCase(), name || null, hash, salt)
+      .run();
+
+    // Generate JWT token
+    const token = await generateJWT(
+      { userId, email: email.toLowerCase() },
+      env.JWT_SECRET
+    );
+
+    // Return success response
+    return jsonResponse({
+      token,
+      user: {
+        id: userId,
+        email: email.toLowerCase(),
+        name: name || null,
+        avatarUrl: null
+      }
+    }, 201);
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    return errorResponse('Failed to create account', 'SIGNUP_FAILED', 500);
+  }
+}
+
+/**
+ * Handle email/password login
+ * POST /api/auth/login
+ * Body: { email, password }
+ */
+export async function handleLogin(request, env) {
+  try {
+    const { email, password } = await request.json();
+
+    // Validation
+    if (!email || !password) {
+      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400);
+    }
+
+    // Look up user by email
+    const user = await env.DB
+      .prepare(`
+        SELECT id, email, name, avatar_url, password_hash, password_salt, auth_provider
+        FROM users
+        WHERE email = ?
+      `)
+      .bind(email.toLowerCase())
+      .first();
+
+    // Generic error message (don't reveal if email exists)
+    if (!user) {
+      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401);
+    }
+
+    // Check if user registered with email/password (not OAuth)
+    if (user.auth_provider !== 'email') {
+      return errorResponse(
+        `This email is registered with ${user.auth_provider}. Please use ${user.auth_provider} sign-in`,
+        'WRONG_AUTH_PROVIDER',
+        401
+      );
+    }
+
+    // Verify password
+    const isValidPassword = await verifyPassword(
+      password,
+      user.password_hash,
+      user.password_salt
+    );
+
+    if (!isValidPassword) {
+      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401);
+    }
+
+    // Generate JWT token
+    const token = await generateJWT(
+      { userId: user.id, email: user.email },
+      env.JWT_SECRET
+    );
+
+    // Return success response
+    return jsonResponse({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatarUrl: user.avatar_url
+      }
+    }, 200);
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return errorResponse('Login failed', 'LOGIN_FAILED', 500);
   }
 }
 

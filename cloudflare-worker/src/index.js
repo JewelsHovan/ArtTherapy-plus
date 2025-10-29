@@ -1,4 +1,4 @@
-import { handleMicrosoftCallback, handleVerifyToken, handleLogout } from './handlers/auth.js';
+import { handleMicrosoftCallback, handleVerifyToken, handleLogout, handleSignup, handleLogin } from './handlers/auth.js';
 import { handleCORS, errorResponse, jsonResponse } from './utils/response.js';
 import OpenAI from 'openai';
 
@@ -21,6 +21,15 @@ export default {
       // Authentication endpoints (public)
       if (path === '/api/auth/microsoft/callback' && request.method === 'POST') {
         return await handleMicrosoftCallback(request, env);
+      }
+
+      // Email/password authentication
+      if (path === '/api/auth/signup' && request.method === 'POST') {
+        return handleSignup(request, env);
+      }
+
+      if (path === '/api/auth/login' && request.method === 'POST') {
+        return handleLogin(request, env);
       }
 
       if (path === '/api/auth/verify' && request.method === 'POST') {

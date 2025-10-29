@@ -40,6 +40,10 @@ api.interceptors.response.use(
 export const painPlusAPI = {
   // Authentication
   auth: {
+    signup: (email, password, name) =>
+      api.post('/auth/signup', { email, password, name }),
+    login: (email, password) =>
+      api.post('/auth/login', { email, password }),
     microsoftCallback: (code) =>
       api.post('/auth/microsoft/callback', { code }),
     verifyToken: () =>
