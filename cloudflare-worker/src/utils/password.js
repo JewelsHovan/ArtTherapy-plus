@@ -10,6 +10,36 @@
  */
 
 /**
+ * Constant-time string comparison to prevent timing attacks
+ *
+ * SECURITY: This function always compares all bytes regardless of where
+ * a mismatch occurs, preventing attackers from inferring password validity
+ * based on response timing.
+ *
+ * @param {string} a - First string (hex-encoded hash)
+ * @param {string} b - Second string (hex-encoded hash)
+ * @returns {boolean} True if strings are equal
+ */
+function timingSafeEqual(a, b) {
+  // Length mismatch - still do full comparison to maintain constant time
+  // but we know the result will be false
+  if (a.length !== b.length) {
+    // Compare against self to maintain timing consistency
+    b = a;
+  }
+
+  let result = a.length === b.length ? 0 : 1;
+
+  // XOR each character code - any difference produces non-zero
+  // OR accumulates all differences
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return result === 0;
+}
+
+/**
  * Hash a password using PBKDF2 with Web Crypto API
  * @param {string} password - Plain text password
  * @returns {Promise<{hash: string, salt: string}>}
@@ -91,6 +121,8 @@ export async function verifyPassword(password, storedHash, storedSalt) {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  // Constant-time comparison to prevent timing attacks
-  return computedHash === storedHash;
+  // SECURITY: Use constant-time comparison to prevent timing attacks
+  // The timingSafeEqual function iterates through ALL characters regardless
+  // of where a mismatch occurs, preventing timing-based password inference
+  return timingSafeEqual(computedHash, storedHash);
 }

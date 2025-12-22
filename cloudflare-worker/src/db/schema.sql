@@ -61,8 +61,17 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   FOREIGN KEY (gallery_item_id) REFERENCES gallery_items(id) ON DELETE SET NULL
 );
 
+-- Rate limiting table (for brute force protection)
+CREATE TABLE IF NOT EXISTS rate_limits (
+  id TEXT PRIMARY KEY,                    -- UUID v4
+  ip TEXT NOT NULL,                       -- Client IP address
+  endpoint TEXT NOT NULL,                 -- 'login' | 'signup'
+  timestamp INTEGER NOT NULL              -- Unix timestamp in milliseconds
+);
+
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_gallery_user_created ON gallery_items(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_journal_user_created ON journal_entries(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_users_microsoft_id ON users(microsoft_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_lookup ON rate_limits(ip, endpoint, timestamp);

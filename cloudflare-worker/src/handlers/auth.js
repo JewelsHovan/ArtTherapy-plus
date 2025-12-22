@@ -9,14 +9,15 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
  *
  * @param {Request} request - Incoming request with authorization code
  * @param {Object} env - Environment bindings (DB, secrets, etc.)
+ * @param {string|null} origin - Request origin for CORS validation
  * @returns {Response} JSON response with token and user data
  */
-export async function handleMicrosoftCallback(request, env) {
+export async function handleMicrosoftCallback(request, env, origin = null) {
   try {
     const { code } = await request.json();
 
     if (!code) {
-      return errorResponse('Authorization code is required', 'INVALID_REQUEST', 400);
+      return errorResponse('Authorization code is required', 'INVALID_REQUEST', 400, origin);
     }
 
     // Exchange code for access token
@@ -39,7 +40,7 @@ export async function handleMicrosoftCallback(request, env) {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('Microsoft token exchange failed:', errorData);
-      return errorResponse('Failed to authenticate with Microsoft', 'AUTH_FAILED', 401);
+      return errorResponse('Failed to authenticate with Microsoft', 'AUTH_FAILED', 401, origin);
     }
 
     const { access_token } = await tokenResponse.json();
@@ -52,7 +53,7 @@ export async function handleMicrosoftCallback(request, env) {
 
     if (!profileResponse.ok) {
       console.error('Microsoft Graph API failed');
-      return errorResponse('Failed to fetch user profile', 'AUTH_FAILED', 401);
+      return errorResponse('Failed to fetch user profile', 'AUTH_FAILED', 401, origin);
     }
 
     const profile = await profileResponse.json();
@@ -103,11 +104,11 @@ export async function handleMicrosoftCallback(request, env) {
         name: user.name,
         avatarUrl: user.avatar_url
       }
-    });
+    }, 200, {}, origin);
 
   } catch (error) {
     console.error('Authentication error:', error);
-    return errorResponse('Authentication failed', 'AUTH_FAILED', 401);
+    return errorResponse('Authentication failed', 'AUTH_FAILED', 401, origin);
   }
 }
 
@@ -117,14 +118,15 @@ export async function handleMicrosoftCallback(request, env) {
  *
  * @param {Request} request - Incoming request with Authorization header
  * @param {Object} env - Environment bindings (DB, secrets, etc.)
+ * @param {string|null} origin - Request origin for CORS validation
  * @returns {Response} JSON response with validation result and user data
  */
-export async function handleVerifyToken(request, env) {
+export async function handleVerifyToken(request, env, origin = null) {
   try {
     // Extract token from Authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return errorResponse('No token provided', 'INVALID_TOKEN', 401);
+      return errorResponse('No token provided', 'INVALID_TOKEN', 401, origin);
     }
 
     const token = authHeader.substring(7);
@@ -137,7 +139,7 @@ export async function handleVerifyToken(request, env) {
     try {
       payload = await verifyJWT(token, env.JWT_SECRET);
     } catch (error) {
-      return errorResponse('Invalid or expired token', 'EXPIRED_TOKEN', 401);
+      return errorResponse('Invalid or expired token', 'EXPIRED_TOKEN', 401, origin);
     }
 
     // Query D1 for user
@@ -147,7 +149,7 @@ export async function handleVerifyToken(request, env) {
       .first();
 
     if (!user) {
-      return errorResponse('User not found', 'USER_NOT_FOUND', 401);
+      return errorResponse('User not found', 'USER_NOT_FOUND', 401, origin);
     }
 
     return jsonResponse({
@@ -158,11 +160,11 @@ export async function handleVerifyToken(request, env) {
         name: user.name,
         avatarUrl: user.avatar_url
       }
-    });
+    }, 200, {}, origin);
 
   } catch (error) {
     console.error('Token verification error:', error);
-    return errorResponse('Token verification failed', 'INVALID_TOKEN', 401);
+    return errorResponse('Token verification failed', 'INVALID_TOKEN', 401, origin);
   }
 }
 
@@ -170,25 +172,28 @@ export async function handleVerifyToken(request, env) {
  * Handle email/password signup
  * POST /api/auth/signup
  * Body: { email, password, name }
+ * @param {Request} request - Incoming request
+ * @param {Object} env - Environment bindings
+ * @param {string|null} origin - Request origin for CORS validation
  */
-export async function handleSignup(request, env) {
+export async function handleSignup(request, env, origin = null) {
   try {
     const { email, password, name } = await request.json();
 
     // Validation
     if (!email || !password) {
-      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400);
+      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400, origin);
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return errorResponse('Invalid email address', 'INVALID_EMAIL', 400);
+      return errorResponse('Invalid email address', 'INVALID_EMAIL', 400, origin);
     }
 
     // Validate password strength
     if (password.length < 8) {
-      return errorResponse('Password must be at least 8 characters', 'WEAK_PASSWORD', 400);
+      return errorResponse('Password must be at least 8 characters', 'WEAK_PASSWORD', 400, origin);
     }
 
     // Check if email already exists
@@ -198,7 +203,7 @@ export async function handleSignup(request, env) {
       .first();
 
     if (existingUser) {
-      return errorResponse('An account with this email already exists', 'EMAIL_EXISTS', 409);
+      return errorResponse('An account with this email already exists', 'EMAIL_EXISTS', 409, origin);
     }
 
     // Hash password
@@ -231,11 +236,11 @@ export async function handleSignup(request, env) {
         name: name || null,
         avatarUrl: null
       }
-    }, 201);
+    }, 201, {}, origin);
 
   } catch (error) {
     console.error('Signup error:', error);
-    return errorResponse('Failed to create account', 'SIGNUP_FAILED', 500);
+    return errorResponse('Failed to create account', 'SIGNUP_FAILED', 500, origin);
   }
 }
 
@@ -243,14 +248,17 @@ export async function handleSignup(request, env) {
  * Handle email/password login
  * POST /api/auth/login
  * Body: { email, password }
+ * @param {Request} request - Incoming request
+ * @param {Object} env - Environment bindings
+ * @param {string|null} origin - Request origin for CORS validation
  */
-export async function handleLogin(request, env) {
+export async function handleLogin(request, env, origin = null) {
   try {
     const { email, password } = await request.json();
 
     // Validation
     if (!email || !password) {
-      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400);
+      return errorResponse('Email and password are required', 'MISSING_FIELDS', 400, origin);
     }
 
     // Look up user by email
@@ -265,7 +273,7 @@ export async function handleLogin(request, env) {
 
     // Generic error message (don't reveal if email exists)
     if (!user) {
-      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401);
+      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401, origin);
     }
 
     // Check if user registered with email/password (not OAuth)
@@ -273,7 +281,8 @@ export async function handleLogin(request, env) {
       return errorResponse(
         `This email is registered with ${user.auth_provider}. Please use ${user.auth_provider} sign-in`,
         'WRONG_AUTH_PROVIDER',
-        401
+        401,
+        origin
       );
     }
 
@@ -285,7 +294,7 @@ export async function handleLogin(request, env) {
     );
 
     if (!isValidPassword) {
-      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401);
+      return errorResponse('Invalid email or password', 'INVALID_CREDENTIALS', 401, origin);
     }
 
     // Generate JWT token
@@ -303,11 +312,11 @@ export async function handleLogin(request, env) {
         name: user.name,
         avatarUrl: user.avatar_url
       }
-    }, 200);
+    }, 200, {}, origin);
 
   } catch (error) {
     console.error('Login error:', error);
-    return errorResponse('Login failed', 'LOGIN_FAILED', 500);
+    return errorResponse('Login failed', 'LOGIN_FAILED', 500, origin);
   }
 }
 
@@ -315,10 +324,11 @@ export async function handleLogin(request, env) {
  * Handle logout
  * Client-side logout stub (no server action needed with stateless JWT)
  *
+ * @param {string|null} origin - Request origin for CORS validation
  * @returns {Response} JSON success response
  */
-export async function handleLogout() {
+export async function handleLogout(origin = null) {
   return jsonResponse({
     success: true
-  });
+  }, 200, {}, origin);
 }

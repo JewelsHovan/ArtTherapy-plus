@@ -1,5 +1,6 @@
 import { handleMicrosoftCallback, handleVerifyToken, handleLogout, handleSignup, handleLogin } from './handlers/auth.js';
 import { handleCORS, errorResponse, jsonResponse } from './utils/response.js';
+import { checkRateLimit, getRateLimitHeaders } from './middleware/rateLimit.js';
 import OpenAI from 'openai';
 
 export default {
@@ -7,37 +8,63 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // Extract origin for CORS validation
+    // This is used throughout to ensure only whitelisted origins receive CORS headers
+    const origin = request.headers.get('Origin');
+
     // CORS preflight
     if (request.method === 'OPTIONS') {
-      return handleCORS();
+      return handleCORS(origin);
     }
 
     try {
       // Health check (public)
       if (path === '/api/health' && request.method === 'GET') {
-        return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() });
+        return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() }, 200, {}, origin);
       }
 
       // Authentication endpoints (public)
       if (path === '/api/auth/microsoft/callback' && request.method === 'POST') {
-        return await handleMicrosoftCallback(request, env);
+        return await handleMicrosoftCallback(request, env, origin);
       }
 
-      // Email/password authentication
+      // Email/password authentication (with rate limiting)
       if (path === '/api/auth/signup' && request.method === 'POST') {
-        return handleSignup(request, env);
+        // SECURITY: Rate limit signup to prevent account enumeration
+        const rateCheck = await checkRateLimit(request, env, 'signup');
+        if (!rateCheck.allowed) {
+          return errorResponse(
+            rateCheck.error,
+            rateCheck.code,
+            429,
+            origin,
+            getRateLimitHeaders(rateCheck)
+          );
+        }
+        return handleSignup(request, env, origin);
       }
 
       if (path === '/api/auth/login' && request.method === 'POST') {
-        return handleLogin(request, env);
+        // SECURITY: Rate limit login to prevent brute force attacks
+        const rateCheck = await checkRateLimit(request, env, 'login');
+        if (!rateCheck.allowed) {
+          return errorResponse(
+            rateCheck.error,
+            rateCheck.code,
+            429,
+            origin,
+            getRateLimitHeaders(rateCheck)
+          );
+        }
+        return handleLogin(request, env, origin);
       }
 
       if (path === '/api/auth/verify' && request.method === 'POST') {
-        return await handleVerifyToken(request, env);
+        return await handleVerifyToken(request, env, origin);
       }
 
       if (path === '/api/auth/logout' && request.method === 'POST') {
-        return await handleLogout();
+        return await handleLogout(origin);
       }
 
       // TODO: Add protected endpoints for gallery, user, journal in Phase 2 & 3
@@ -56,7 +83,7 @@ export default {
         const painDescription = data.description || '';
 
         if (!painDescription) {
-          return errorResponse('Description is required', 'VALIDATION_ERROR', 400);
+          return errorResponse('Description is required', 'VALIDATION_ERROR', 400, origin);
         }
 
         const artisticPrompt = `Create an abstract artistic representation of: ${painDescription}.
@@ -80,7 +107,7 @@ export default {
           image_url: imageUrl,
           prompt_used: revisedPrompt,
           original_description: painDescription,
-        });
+        }, 200, {}, origin);
       }
 
       if (path === '/api/generate/prompt' && request.method === 'POST') {
@@ -88,7 +115,7 @@ export default {
         const painDescription = data.description || '';
 
         if (!painDescription) {
-          return errorResponse('Description is required', 'VALIDATION_ERROR', 400);
+          return errorResponse('Description is required', 'VALIDATION_ERROR', 400, origin);
         }
 
         const completion = await openai.chat.completions.create({
@@ -116,7 +143,7 @@ export default {
           success: true,
           prompts: prompts.prompts || [],
           original_description: painDescription,
-        });
+        }, 200, {}, origin);
       }
 
       if (path === '/api/reflect' && request.method === 'POST') {
@@ -148,7 +175,7 @@ export default {
           success: true,
           questions: questions.questions || [],
           original_description: painDescription,
-        });
+        }, 200, {}, origin);
       }
 
       if (path === '/api/inspire' && request.method === 'GET') {
@@ -175,7 +202,7 @@ export default {
         return jsonResponse({
           success: true,
           inspirations: inspirations.inspirations || [],
-        });
+        }, 200, {}, origin);
       }
 
       if (path === '/api/edit/image' && request.method === 'POST') {
@@ -184,7 +211,7 @@ export default {
         const painDescription = data.description || data.prompt || '';
 
         if (!imageBase64 || !painDescription) {
-          return errorResponse('Image and pain description are required', 'VALIDATION_ERROR', 400);
+          return errorResponse('Image and pain description are required', 'VALIDATION_ERROR', 400, origin);
         }
 
         try {
@@ -246,7 +273,7 @@ export default {
             original_description: painDescription,
             style_analysis: styleAnalysis,
             model_used: 'dall-e-3-with-vision',
-          });
+          }, 200, {}, origin);
         } catch (error) {
           console.error('Image transformation error:', error);
           throw error;
@@ -254,11 +281,11 @@ export default {
       }
 
       // 404 for unknown routes
-      return errorResponse('Not found', 'NOT_FOUND', 404);
+      return errorResponse('Not found', 'NOT_FOUND', 404, origin);
 
     } catch (error) {
       console.error('Worker error:', error);
-      return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
+      return errorResponse('Internal server error', 'INTERNAL_ERROR', 500, origin);
     }
   }
 };
