@@ -89,3 +89,6 @@ pip-delete-this-directory.txt
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Working docs (temporary planning files)
+working-docs/
