@@ -29,9 +29,27 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear and redirect
+      const currentPath = window.location.pathname;
+      const isAuthPage = ['/register', '/'].includes(currentPath);
+
+      // Clear token
       localStorage.removeItem('auth_token');
-      window.location.href = '/register';
+
+      // Don't redirect if already on auth page
+      if (!isAuthPage) {
+        // Save current location to redirect back after login
+        sessionStorage.setItem('auth_redirect', currentPath);
+
+        // Dispatch event for UI notification
+        window.dispatchEvent(new CustomEvent('auth:expired', {
+          detail: { message: 'Your session has expired. Please log in again.' }
+        }));
+
+        // Delay redirect to allow user to see message
+        setTimeout(() => {
+          window.location.href = '/register';
+        }, 1500);
+      }
     }
     return Promise.reject(error);
   }
