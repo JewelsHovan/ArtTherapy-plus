@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../common/Logo';
@@ -6,11 +6,38 @@ import Logo from '../common/Logo';
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     setIsDropdownOpen(false);
     logout();
   };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setIsDropdownOpen(false);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
+
+  // Click outside detection to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
@@ -23,10 +50,13 @@ export default function Header() {
 
           {/* User menu (only show if authenticated) */}
           {isAuthenticated && (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-3 focus:outline-none"
+                onKeyDown={handleKeyDown}
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
+                className="flex items-center space-x-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
               >
                 {/* Avatar */}
                 {user?.avatarUrl ? (
@@ -70,47 +100,57 @@ export default function Header() {
 
               {/* Dropdown menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200">
+                <div
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200"
+                  role="menu"
+                  aria-orientation="vertical"
+                >
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     onClick={() => setIsDropdownOpen(false)}
+                    role="menuitem"
                   >
                     Profile
                   </Link>
                   <Link
                     to="/settings"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     onClick={() => setIsDropdownOpen(false)}
+                    role="menuitem"
                   >
                     Settings
                   </Link>
                   <Link
                     to="/gallery"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     onClick={() => setIsDropdownOpen(false)}
+                    role="menuitem"
                   >
                     Gallery
                   </Link>
                   <hr className="my-1" />
                   <Link
                     to="/about"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     onClick={() => setIsDropdownOpen(false)}
+                    role="menuitem"
                   >
                     About
                   </Link>
                   <Link
                     to="/mode"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     onClick={() => setIsDropdownOpen(false)}
+                    role="menuitem"
                   >
                     Create Art
                   </Link>
                   <hr className="my-1" />
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                    role="menuitem"
                   >
                     Logout
                   </button>
