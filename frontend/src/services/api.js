@@ -55,6 +55,58 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Sleep utility for delays
+ * @param {number} ms - Milliseconds to sleep
+ * @returns {Promise} - Resolves after the delay
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Checks if an error should trigger a retry
+ * @param {Error} error - The error to check
+ * @returns {boolean} - True if the error is retryable
+ */
+const isRetryableError = (error) => {
+  // Network error (no response)
+  if (!error.response) return true;
+
+  // 5xx server errors
+  const status = error.response.status;
+  return status >= 500 && status < 600;
+};
+
+/**
+ * Wraps an async function with retry logic using exponential backoff
+ * @param {Function} fn - Async function to retry
+ * @param {Object} options - Retry options
+ * @param {number} options.maxRetries - Maximum number of retry attempts (default: 3)
+ * @param {number} options.baseDelay - Base delay in ms for exponential backoff (default: 1000)
+ * @returns {Promise} - Result of the function or throws after max retries
+ *
+ * Usage example:
+ * const result = await withRetry(() => api.get('/some-endpoint'));
+ */
+export const withRetry = async (fn, options = {}) => {
+  const { maxRetries = 3, baseDelay = 1000 } = options;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+      const isRetryable = isRetryableError(error);
+
+      if (isLastAttempt || !isRetryable) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt); // 1s, 2s, 4s
+      await sleep(delay);
+    }
+  }
+};
+
 export const painPlusAPI = {
   // Authentication
   auth: {

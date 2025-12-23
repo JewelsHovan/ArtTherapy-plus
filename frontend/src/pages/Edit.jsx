@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ImageUploader from "../components/ImageUploader";
 import EditPromptInput from "../components/EditPromptInput";
 import EditVisualization from "../components/EditVisualization";
 import { painPlusAPI } from "../services/api";
 import { galleryStorage } from "../utils/storage";
+
+const TRANSFORMATION_STAGES = [
+  { id: 1, label: "Analyzing your image..." },
+  { id: 2, label: "Applying transformation..." },
+  { id: 3, label: "Finalizing artwork..." },
+];
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -15,12 +21,31 @@ const Edit = () => {
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Upload, 2: Describe, 3: View
   const [isSaved, setIsSaved] = useState(false);
+  const [transformationStage, setTransformationStage] = useState(1);
+  const stageTimersRef = useRef([]);
+
+  // Clear stage timers when transformation completes or is cancelled
+  useEffect(() => {
+    if (!isLoading) {
+      stageTimersRef.current.forEach((timer) => clearTimeout(timer));
+      stageTimersRef.current = [];
+      setTransformationStage(1);
+    }
+  }, [isLoading]);
 
   const handleImageUpload = (processedImage) => {
     setUploadedImage(processedImage);
     setError(null);
     // Auto-advance to step 2
     setTimeout(() => setStep(2), 500);
+  };
+
+  const handleCancelTransformation = () => {
+    setIsLoading(false);
+    stageTimersRef.current.forEach((timer) => clearTimeout(timer));
+    stageTimersRef.current = [];
+    setTransformationStage(1);
+    setStep(2); // Go back to describe step
   };
 
   const handleTransform = async () => {
@@ -32,6 +57,12 @@ const Edit = () => {
     setIsLoading(true);
     setError(null);
     setStep(3); // Move to visualization step
+    setTransformationStage(1);
+
+    // Set up stage progression timers
+    const timer1 = setTimeout(() => setTransformationStage(2), 3000);
+    const timer2 = setTimeout(() => setTransformationStage(3), 6000);
+    stageTimersRef.current = [timer1, timer2];
 
     try {
       const response = await painPlusAPI.editImage({
@@ -244,6 +275,9 @@ const Edit = () => {
                 painDescription={painDescription}
                 transformedImage={transformedImage}
                 isLoading={isLoading}
+                transformationStage={transformationStage}
+                transformationStages={TRANSFORMATION_STAGES}
+                onCancelTransformation={handleCancelTransformation}
               />
 
               {transformedImage && !isLoading && (
