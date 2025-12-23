@@ -8,10 +8,16 @@ binding = "DB"
 database_name = "arttherapy-plus-db"
 database_id = "87e9664f-3f72-4dce-aab9-b330c72b7471"
 
+# R2 Storage binding for persistent image storage
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "arttherapy-plus-images"
+
 # Public environment variables
 [vars]
-MICROSOFT_CLIENT_ID = "PLACEHOLDER_MICROSOFT_CLIENT_ID"
+MICROSOFT_CLIENT_ID = "1068db0a-2e86-4094-aa91-b55bca8ac09a"
 MICROSOFT_TENANT_ID = "common"
+R2_PUBLIC_URL = "https://pub-57ea486a31284eb2903893d8e0e9d516.r2.dev"
 
 # Secrets (set via: wrangler secret put SECRET_NAME)
 # - MICROSOFT_CLIENT_SECRET
@@ -21,3 +27,10 @@ MICROSOFT_TENANT_ID = "common"
 # Configure CORS
 [env.production.vars]
 ALLOWED_ORIGINS = "https://arttherapy-plus.pages.dev,http://localhost:5173"
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true

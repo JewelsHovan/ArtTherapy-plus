@@ -5,10 +5,15 @@
 -- Users table (core authentication + profile)
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,                    -- UUID v4
-  microsoft_id TEXT UNIQUE NOT NULL,      -- Microsoft OAuth user ID
+  microsoft_id TEXT UNIQUE,               -- Microsoft OAuth user ID (NULL for email auth)
   email TEXT UNIQUE NOT NULL,
-  name TEXT,                              -- From Microsoft profile
-  avatar_url TEXT,                        -- Microsoft profile picture
+  name TEXT,                              -- From Microsoft profile or signup
+  avatar_url TEXT,                        -- Profile picture URL
+
+  -- Email/password authentication fields
+  password_hash TEXT,                     -- Hashed password (NULL for OAuth users)
+  password_salt TEXT,                     -- Password salt (NULL for OAuth users)
+  auth_provider TEXT DEFAULT 'email',     -- 'email' | 'microsoft'
 
   -- Profile fields (currently in Profile.jsx)
   age INTEGER,
