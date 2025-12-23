@@ -8,3 +8,10 @@ bucket = "./dist"
 routes = [
   { pattern = "arttherapy-plus.pages.dev", custom_domain = false }
 ]
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true

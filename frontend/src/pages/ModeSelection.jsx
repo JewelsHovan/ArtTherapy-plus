@@ -37,8 +37,8 @@ const ModeSelection = () => {
           {/* Create Original Art Button - Primary Blue */}
           <button
             onClick={handleCreateOriginal}
-            className="w-full py-4 px-6 bg-[#3B82F6] text-white rounded-xl font-semibold text-lg
-              hover:bg-[#2563EB] transform hover:-translate-y-1 transition-all duration-300
+            className="w-full py-4 px-6 bg-primary text-white rounded-xl font-semibold text-lg
+              hover:bg-primary-hover transform hover:-translate-y-1 transition-all duration-300
               shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
@@ -53,8 +53,8 @@ const ModeSelection = () => {
           {/* Transform Your Image Button - Secondary Orange */}
           <button
             onClick={handleTransformImage}
-            className="w-full py-4 px-6 bg-[#F59E0B] text-white rounded-xl font-semibold text-lg
-              hover:bg-[#D97706] transform hover:-translate-y-1 transition-all duration-300
+            className="w-full py-4 px-6 bg-secondary text-white rounded-xl font-semibold text-lg
+              hover:bg-secondary-hover transform hover:-translate-y-1 transition-all duration-300
               shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
@@ -69,8 +69,8 @@ const ModeSelection = () => {
           {/* Inspire Me Button - Outline Style */}
           <button
             onClick={handleInspireMe}
-            className="w-full py-4 px-6 bg-transparent text-[#3B82F6] border-2 border-[#3B82F6] 
-              rounded-xl font-semibold text-lg hover:bg-[#3B82F6] hover:text-white
+            className="w-full py-4 px-6 bg-transparent text-primary border-2 border-primary
+              rounded-xl font-semibold text-lg hover:bg-primary hover:text-white
               transform hover:-translate-y-1 transition-all duration-300
               shadow-md hover:shadow-lg"
           >

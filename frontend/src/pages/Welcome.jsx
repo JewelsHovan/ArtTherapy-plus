@@ -29,8 +29,8 @@ const Welcome = () => {
         <div className="flex flex-col items-center gap-4 w-full px-8">
           <button
             onClick={handleGenerate}
-            className="w-full py-4 px-6 bg-[#3B82F6] text-white rounded-xl font-semibold text-lg
-              hover:bg-[#2563EB] transform hover:-translate-y-1 transition-all duration-300
+            className="w-full py-4 px-6 bg-primary text-white rounded-xl font-semibold text-lg
+              hover:bg-primary-hover transform hover:-translate-y-1 transition-all duration-300
               shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
@@ -44,8 +44,8 @@ const Welcome = () => {
           
           <button
             onClick={handleReflect}
-            className="w-full py-4 px-6 bg-[#F59E0B] text-white rounded-xl font-semibold text-lg
-              hover:bg-[#D97706] transform hover:-translate-y-1 transition-all duration-300
+            className="w-full py-4 px-6 bg-secondary text-white rounded-xl font-semibold text-lg
+              hover:bg-secondary-hover transform hover:-translate-y-1 transition-all duration-300
               shadow-md hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-3">
