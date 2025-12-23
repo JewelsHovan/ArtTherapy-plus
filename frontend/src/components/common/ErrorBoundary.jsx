@@ -4,7 +4,7 @@ import Button from './Button';
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, retryCount: 0 };
   }
 
   static getDerivedStateFromError(error) {
@@ -15,8 +15,16 @@ class ErrorBoundary extends Component {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
-  handleReset = () => {
-    this.setState({ hasError: false, error: null });
+  resetErrorBoundary = () => {
+    this.setState((prev) => ({
+      hasError: false,
+      error: null,
+      retryCount: prev.retryCount + 1,
+    }));
+  };
+
+  handleReturnHome = () => {
+    this.setState({ hasError: false, error: null, retryCount: 0 });
     window.location.href = '/';
   };
 
@@ -45,9 +53,21 @@ class ErrorBoundary extends Component {
               <p className="text-gray-600 mb-6">
                 We're sorry, but something unexpected happened. Please try again.
               </p>
-              <Button variant="primary" onClick={this.handleReset}>
-                Return Home
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {this.state.retryCount < 3 && (
+                  <Button variant="primary" onClick={this.resetErrorBoundary}>
+                    Try Again
+                  </Button>
+                )}
+                <Button variant="secondary" onClick={this.handleReturnHome}>
+                  Return Home
+                </Button>
+              </div>
+              {this.state.retryCount >= 3 && (
+                <p className="text-sm text-gray-500 mt-4">
+                  Multiple retry attempts failed. Please return home and try again later.
+                </p>
+              )}
             </div>
           </div>
         </div>

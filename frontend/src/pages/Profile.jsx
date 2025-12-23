@@ -1,98 +1,183 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { painPlusAPI } from '../services/api';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const profileFields = [
-    { label: 'Sex', value: 'Prefer not to say' },
-    { label: 'Gender', value: 'Not specified' },
-    { label: 'Age', value: '25' },
-    { label: 'Symptoms', value: 'Chronic back pain, anxiety' },
-    { label: 'Location', value: 'Toronto, Canada' },
-    { label: 'Languages spoken', value: 'English, French' },
-    { label: 'Occupation', value: 'Software Developer' },
-    { label: 'Relationship status', value: 'Single' },
-    { label: 'Prescriptions', value: 'Ibuprofen 400mg' },
-    { label: 'Activity level', value: 'Moderate' },
-  ];
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await painPlusAPI.user.getProfile();
+      setProfile(response.data.profile);
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setError('Failed to load profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const profileFields = profile ? [
+    { label: 'Sex', value: profile.sex || 'Not specified' },
+    { label: 'Gender', value: profile.gender || 'Not specified' },
+    { label: 'Age', value: profile.age || 'Not specified' },
+    { label: 'Symptoms', value: Array.isArray(profile.symptoms) && profile.symptoms.length > 0
+      ? profile.symptoms.join(', ')
+      : 'None specified' },
+    { label: 'Location', value: profile.location || 'Not specified' },
+    { label: 'Languages spoken', value: Array.isArray(profile.languages) && profile.languages.length > 0
+      ? profile.languages.join(', ')
+      : 'Not specified' },
+    { label: 'Occupation', value: profile.occupation || 'Not specified' },
+    { label: 'Relationship status', value: profile.relationship_status || 'Not specified' },
+    { label: 'Prescriptions', value: Array.isArray(profile.prescriptions) && profile.prescriptions.length > 0
+      ? profile.prescriptions.join(', ')
+      : 'None' },
+    { label: 'Activity level', value: profile.activity_level || 'Not specified' },
+  ] : [];
+
+  // Filter profile fields based on search query
+  const filteredFields = profileFields.filter(field =>
+    field.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (field.value && field.value.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Clear search handler
+  const clearSearch = () => setSearchQuery('');
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button onClick={loadProfile} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6">
+    <div className="min-h-screen bg-gray-50 lg:flex">
+      {/* Mobile header */}
+      <div className="lg:hidden bg-white border-b border-gray-200 p-4">
+        <h1 className="text-xl font-bold">Profile</h1>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-6">
         <h1 className="text-2xl font-bold mb-8">Profile</h1>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8 pt-20">
-        {/* Profile Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">My Profile</h2>
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gray-300 rounded-full overflow-hidden">
-                <img 
-                  src="https://via.placeholder.com/64" 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-medium">Username</h3>
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-blue-500">✓</span> Verified
-                  </span>
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-yellow-500">🏆</span> First Spark
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* Main content */}
+      <div className="flex-1 p-4 lg:p-8">
+        {/* Search bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex gap-4 mb-8">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+        {/* Profile card */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 bg-gray-300 rounded-full overflow-hidden flex-shrink-0">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl font-bold">
+                  {profile?.name?.charAt(0) || 'U'}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-medium truncate">{profile?.name || 'User'}</h3>
+              <p className="text-sm text-gray-500 truncate">{profile?.email}</p>
+              <div className="flex items-center gap-4 mt-1">
+                <span className="text-sm text-gray-600 flex items-center gap-1">
+                  <span className="text-blue-500">✓</span> Verified
+                </span>
+              </div>
+            </div>
           </div>
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-            <span>🔽</span>
-            <span>Filter</span>
+
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
+          >
+            Manage Subscription
           </button>
         </div>
 
-        {/* Profile Fields */}
-        <div className="space-y-4">
-          {profileFields.map((field, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-sm text-gray-600">{field.label}</h3>
-                  <p className="text-lg mt-1">{field.value}</p>
-                </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+        {/* Profile fields */}
+        <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
+          {filteredFields.length > 0 ? (
+            filteredFields.map((field, index) => (
+              <div key={index} className="flex justify-between items-center p-4">
+                <span className="text-gray-600">{field.label}</span>
+                <span className="text-gray-900 text-right max-w-[60%] truncate">{field.value}</span>
               </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              <p>No results found for "{searchQuery}"</p>
+              <button
+                onClick={clearSearch}
+                className="mt-2 text-primary hover:underline"
+              >
+                Clear search
+              </button>
             </div>
-          ))}
-          
-          {/* Manage Subscription */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200 mt-6">
-            <button className="text-lg text-blue-600 hover:underline">
-              Manage Subscription
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

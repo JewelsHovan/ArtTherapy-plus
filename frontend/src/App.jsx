@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import ComponentShowcase from './pages/ComponentShowcase';
 import Inspire from './pages/Inspire';
 import Reflect from './pages/Reflect';
+import Journal from './pages/Journal';
 import NotFound from './pages/NotFound';
 
 // Layout
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/componentshowcase" element={<ComponentShowcase />} />
                 <Route path="/inspire" element={<Inspire />} />
                 <Route path="/reflect" element={<Reflect />} />
+                <Route path="/journal" element={<Journal />} />
               </Route>
             </Route>
 

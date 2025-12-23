@@ -1,8 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const ImageModal = ({ isOpen, onClose, imageData }) => {
   const [showImage, setShowImage] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setShowImage(false);
+      setIsClosing(false);
+    }, 300);
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -15,14 +26,60 @@ const ImageModal = ({ isOpen, onClose, imageData }) => {
     }
   }, [isOpen]);
 
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setShowImage(false);
-      setIsClosing(false);
-    }, 300);
-  };
+  // Focus trap and keyboard handling
+  useEffect(() => {
+    if (!isOpen || isClosing) return;
+
+    // Focus close button when modal opens
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      // Handle Escape key to close modal
+      if (event.key === 'Escape') {
+        handleClose();
+        return;
+      }
+
+      // Handle Tab key for focus trap
+      if (event.key === 'Tab') {
+        const modal = modalRef.current;
+        if (!modal) return;
+
+        const focusableSelectors = [
+          'button',
+          '[href]',
+          'input',
+          'select',
+          'textarea',
+          '[tabindex]:not([tabindex="-1"])'
+        ];
+        const focusableElements = modal.querySelectorAll(focusableSelectors.join(', '));
+        const focusableArray = Array.from(focusableElements);
+
+        if (focusableArray.length === 0) return;
+
+        const firstElement = focusableArray[0];
+        const lastElement = focusableArray[focusableArray.length - 1];
+
+        if (event.shiftKey) {
+          // Shift+Tab: cycle backwards
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          // Tab: cycle forwards
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isClosing, handleClose]);
 
   if (!isOpen && !isClosing) return null;
 
@@ -33,17 +90,26 @@ const ImageModal = ({ isOpen, onClose, imageData }) => {
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-75" 
+      <div
+        className="absolute inset-0 bg-black bg-opacity-75"
         onClick={handleClose}
+        aria-hidden="true"
       />
-      
-      <div className={`relative w-[90vw] h-[90vh] max-w-7xl bg-white rounded-lg shadow-2xl overflow-hidden transition-transform duration-300 flex flex-col ${isClosing ? 'scale-95' : 'scale-100'}`}>
+
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className={`relative w-[90vw] h-[90vh] max-w-7xl bg-white rounded-lg shadow-2xl overflow-hidden transition-transform duration-300 flex flex-col ${isClosing ? 'scale-95' : 'scale-100'}`}
+      >
         <button
+          ref={closeButtonRef}
           onClick={handleClose}
           className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-lg"
+          aria-label="Close modal"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -55,7 +121,7 @@ const ImageModal = ({ isOpen, onClose, imageData }) => {
 
           <div className="relative flex-1 flex items-center justify-center min-h-0">
             <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-1000 p-4 ${showImage ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6">Your Pain Description</h2>
+              <h2 id="modal-title" className="text-2xl md:text-3xl font-bold text-primary mb-6">Your Pain Description</h2>
               <div className="max-w-2xl mx-auto text-center">
                 <p className="text-lg md:text-xl text-gray-700 leading-relaxed animate-fadeIn">
                   {imageData.description}

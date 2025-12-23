@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { galleryStorage } from '../utils/storage';
 
-const EditVisualization = ({ 
-  originalImage, 
-  painDescription, 
-  transformedImage, 
-  isLoading = false 
+const EditVisualization = ({
+  originalImage,
+  painDescription,
+  transformedImage,
+  isLoading = false,
+  transformationStage = 1,
+  transformationStages = [],
+  onCancelTransformation,
 }) => {
   const [showTransformed, setShowTransformed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -90,15 +93,61 @@ const EditVisualization = ({
           <h3 className="text-lg font-semibold text-gray-700 mb-3">Therapeutic Transformation</h3>
           <div className="rounded-lg overflow-hidden shadow-md bg-white relative">
             {isLoading ? (
-              <div className="w-full h-64 lg:h-80 bg-gray-50 flex flex-col items-center justify-center">
+              <div className="w-full h-64 lg:h-80 bg-gray-50 flex flex-col items-center justify-center p-6">
+                {/* Spinner */}
                 <div className="loader mb-4">
-                  <svg className="animate-spin h-10 w-10 text-purple-600" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" 
+                    <path className="opacity-75" fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                 </div>
-                <p className="text-gray-500 text-sm animate-pulse">Creating your transformation...</p>
+
+                {/* Current stage text */}
+                <p className="text-gray-600 text-sm mb-4 animate-pulse">
+                  {transformationStages[transformationStage - 1]?.label || "Processing..."}
+                </p>
+
+                {/* Progress indicator dots */}
+                <div className="flex items-center gap-3 mb-4">
+                  {transformationStages.map((stage) => (
+                    <div key={stage.id} className="flex items-center">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                          ${stage.id < transformationStage
+                            ? "bg-green-500 border-green-500 text-white"
+                            : stage.id === transformationStage
+                              ? "bg-primary border-primary text-white"
+                              : "bg-white border-gray-300 text-gray-400"
+                          }`}
+                      >
+                        {stage.id < transformationStage ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-xs font-medium">{stage.id}</span>
+                        )}
+                      </div>
+                      {stage.id < transformationStages.length && (
+                        <div
+                          className={`w-8 h-0.5 ml-3 transition-all duration-300
+                            ${stage.id < transformationStage ? "bg-green-500" : "bg-gray-300"}`}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Cancel button */}
+                {onCancelTransformation && (
+                  <button
+                    onClick={onCancelTransformation}
+                    className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
             ) : transformedImage ? (
               <>

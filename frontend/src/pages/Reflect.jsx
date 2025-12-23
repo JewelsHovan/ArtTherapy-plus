@@ -81,10 +81,54 @@ const Reflect = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Preparing reflection questions...</p>
+      <div className="min-h-screen p-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Header skeleton */}
+          <div className="card-clean mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div className="h-5 w-80 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Artwork skeleton */}
+            <div className="lg:col-span-1">
+              <div className="card-clean">
+                <div className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse mb-4"></div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-1"></div>
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Question skeletons */}
+            <div className="lg:col-span-2 space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card-clean">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1 pt-1">
+                      <div className="h-5 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-5 w-2/3 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="h-24 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+                </div>
+              ))}
+
+              {/* Additional notes skeleton */}
+              <div className="card-clean">
+                <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-4"></div>
+                <div className="h-24 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

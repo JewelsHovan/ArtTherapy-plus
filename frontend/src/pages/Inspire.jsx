@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { painPlusAPI } from '../services/api';
 import Button from '../components/common/Button';
+import { CardSkeleton } from '../components/common/Skeleton';
 
 const Inspire = () => {
   const navigate = useNavigate();
@@ -50,10 +51,28 @@ const Inspire = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Finding inspiration...</p>
+      <div className="min-h-screen p-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="card-clean mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="flex gap-4">
+                <div className="h-10 w-20 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          {/* Cards Skeleton Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
         </div>
       </div>
     );

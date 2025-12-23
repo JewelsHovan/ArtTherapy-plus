@@ -35,6 +35,7 @@ const EditPromptInput = ({ value, onChange, onSubmit, isLoading = false }) => {
           
           <textarea
             id="pain-description"
+            autoFocus
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setIsFocused(true)}

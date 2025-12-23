@@ -5,6 +5,7 @@ import { painPlusAPI } from '../services/api';
 import Button from '../components/common/Button';
 import Logo from '../components/common/Logo';
 import TextInput from '../components/forms/TextInput';
+import PasswordInput from '../components/forms/PasswordInput';
 
 export default function Registration() {
   const navigate = useNavigate();
@@ -120,6 +121,19 @@ export default function Registration() {
     }
   };
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailBlur = () => {
+    if (formData.email && !validateEmail(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+    } else {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -145,10 +159,9 @@ export default function Registration() {
     const newErrors = {};
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
+    } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
@@ -273,9 +286,10 @@ export default function Registration() {
                   type="text"
                   id="name"
                   name="name"
+                  autoFocus
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                   placeholder="Your name"
@@ -295,9 +309,11 @@ export default function Registration() {
                 type="email"
                 id="email"
                 name="email"
+                autoFocus={mode === 'login'}
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                onBlur={handleEmailBlur}
+                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                 placeholder="your.email@example.com"
@@ -308,47 +324,28 @@ export default function Registration() {
             </div>
 
             {/* Password field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                placeholder="At least 8 characters"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              label="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="At least 8 characters"
+              error={errors.password}
+              showStrength={mode === 'signup'}
+            />
 
             {/* Confirm password field (signup only) */}
             {mode === 'signup' && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                  } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                  placeholder="Re-enter your password"
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-                )}
-              </div>
+              <PasswordInput
+                id="confirmPassword"
+                name="confirmPassword"
+                label="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Re-enter your password"
+                error={errors.confirmPassword}
+              />
             )}
 
             {/* Submit button */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ImageModal from '../components/modals/ImageModal';
 import { galleryStorage } from '../utils/storage';
+import Skeleton, { GalleryGridSkeleton } from '../components/common/Skeleton';
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -61,10 +62,13 @@ const Gallery = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your gallery...</p>
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="card-clean mb-8 animate-fadeIn">
+            <Skeleton variant="title" width="40%" className="mb-2" />
+            <Skeleton variant="text" width="60%" />
+          </div>
+          <GalleryGridSkeleton count={8} />
         </div>
       </div>
     );
@@ -117,21 +121,34 @@ const Gallery = () => {
 
         {/* Gallery Grid */}
         {galleryItems.length === 0 ? (
-          <div className="card-clean p-12 text-center animate-fadeIn" style={{ animationDelay: '150ms' }}>
-            <div className="max-w-md mx-auto">
-              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">No Artwork Yet</h2>
-              <p className="text-gray-500 mb-6">Start creating your visual pain journey</p>
-              <button
-                onClick={() => navigate('/mode')}
-                className="px-6 py-3 bg-secondary text-white rounded-lg
-                  hover:bg-secondary-hover transition-all duration-300 font-medium shadow-md"
-              >
-                Create Your First Artwork
-              </button>
+          <div className="card-clean py-16 text-center animate-fadeIn" style={{ animationDelay: '150ms' }}>
+            {/* Decorative illustration */}
+            <div className="mb-8">
+              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-100 to-orange-100 rounded-full flex items-center justify-center">
+                <svg className="w-16 h-16 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
             </div>
+
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+              Your Healing Journey Awaits
+            </h2>
+            <p className="text-gray-600 max-w-md mx-auto mb-8 leading-relaxed">
+              Art therapy is a powerful way to express and process emotions.
+              Create your first piece and begin transforming your experience into something beautiful.
+            </p>
+
+            <button
+              onClick={() => navigate('/mode')}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-full font-medium shadow-md hover:shadow-lg hover:bg-primary/90 transition-all duration-300"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Begin Creating
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -157,8 +174,9 @@ const Gallery = () => {
                     onClick={(e) => handleReflect(item, e)}
                     className="absolute top-2 left-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     title="Reflect on artwork"
+                    aria-label="Reflect on artwork"
                   >
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                   </button>
@@ -166,8 +184,9 @@ const Gallery = () => {
                     onClick={(e) => handleDeleteImage(item.id, e)}
                     className="absolute top-2 right-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     title="Delete artwork"
+                    aria-label="Delete artwork"
                   >
-                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
