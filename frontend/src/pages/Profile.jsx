@@ -46,6 +46,15 @@ const Profile = () => {
     { label: 'Activity level', value: profile.activity_level || 'Not specified' },
   ] : [];
 
+  // Filter profile fields based on search query
+  const filteredFields = profileFields.filter(field =>
+    field.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (field.value && field.value.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Clear search handler
+  const clearSearch = () => setSearchQuery('');
+
   // Loading state
   if (isLoading) {
     return (
@@ -94,7 +103,7 @@ const Profile = () => {
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-10 py-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -104,6 +113,17 @@ const Profile = () => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -140,12 +160,24 @@ const Profile = () => {
 
         {/* Profile fields */}
         <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
-          {profileFields.map((field, index) => (
-            <div key={index} className="flex justify-between items-center p-4">
-              <span className="text-gray-600">{field.label}</span>
-              <span className="text-gray-900 text-right max-w-[60%] truncate">{field.value}</span>
+          {filteredFields.length > 0 ? (
+            filteredFields.map((field, index) => (
+              <div key={index} className="flex justify-between items-center p-4">
+                <span className="text-gray-600">{field.label}</span>
+                <span className="text-gray-900 text-right max-w-[60%] truncate">{field.value}</span>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              <p>No results found for "{searchQuery}"</p>
+              <button
+                onClick={clearSearch}
+                className="mt-2 text-primary hover:underline"
+              >
+                Clear search
+              </button>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

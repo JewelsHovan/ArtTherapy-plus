@@ -60,32 +60,42 @@ const Settings = () => {
 
   const settingsOptions = {
     general: [
-      'Text Size',
-      'Language',
-      'Colourblind friendly themes',
-      'Text-to-Speech',
-      'Speech-to-Text',
-      'Link to Bluetooth-enabled devices'
+      { label: 'Text Size', description: 'Adjust the size of text throughout the app' },
+      { label: 'Language', description: 'Change the display language' },
+      { label: 'Colourblind friendly themes', description: 'Enable themes optimized for color vision deficiency' },
+      { label: 'Text-to-Speech', description: 'Have content read aloud' },
+      { label: 'Speech-to-Text', description: 'Use voice input for text fields' },
+      { label: 'Link to Bluetooth-enabled devices', description: 'Connect external devices' }
     ],
     accessibility: [
-      'High Contrast Mode',
-      'Large Text',
-      'Screen Reader Support',
-      'Keyboard Navigation'
+      { label: 'High Contrast Mode', description: 'Increase contrast for better visibility' },
+      { label: 'Large Text', description: 'Use larger font sizes' },
+      { label: 'Screen Reader Support', description: 'Optimize for screen readers' },
+      { label: 'Keyboard Navigation', description: 'Navigate using keyboard shortcuts' }
     ],
     language: [
-      'English',
-      'Spanish',
-      'French',
-      'German'
+      { label: 'English', description: 'Set English as display language' },
+      { label: 'Spanish', description: 'Set Spanish as display language' },
+      { label: 'French', description: 'Set French as display language' },
+      { label: 'German', description: 'Set German as display language' }
     ],
     privacy: [
-      'Data Collection',
-      'Analytics',
-      'Third-party Sharing',
-      'Account Privacy'
+      { label: 'Data Collection', description: 'Control what data is collected' },
+      { label: 'Analytics', description: 'Manage usage analytics preferences' },
+      { label: 'Third-party Sharing', description: 'Control data sharing with partners' },
+      { label: 'Account Privacy', description: 'Manage account visibility settings' }
     ]
   };
+
+  // Clear search handler
+  const clearSearch = () => setSearchQuery('');
+
+  // Get all options for current category and filter by search query
+  const currentOptions = settingsOptions[selectedCategory] || [];
+  const filteredOptions = currentOptions.filter(option =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (option.description && option.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   if (isLoading) {
     return (
@@ -157,14 +167,25 @@ const Settings = () => {
 
         {/* Search and Filter */}
         <div className="flex gap-4 mb-8">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
           <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
             <span>🔽</span>
@@ -174,50 +195,57 @@ const Settings = () => {
 
         {/* Settings Options */}
         <div className="space-y-6">
-          {selectedCategory === 'general' && (
-            <>
-              {/* Text Size Slider */}
-              <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium">Text Size</h3>
-                  {isSaving && <span className="text-xs text-gray-500">Saving...</span>}
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm">A</span>
-                  <div className="flex-1 relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={settings.textSize}
-                      onChange={handleTextSizeChange}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                    />
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-black rounded-full pointer-events-none"
-                      style={{ left: `calc(${settings.textSize}% - 12px)` }}
-                    />
+          {filteredOptions.length === 0 ? (
+            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center text-gray-500">
+              <p>No matching settings found for "{searchQuery}"</p>
+              <button
+                onClick={clearSearch}
+                className="mt-2 text-primary hover:underline"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : (
+            filteredOptions.map((option, index) => {
+              // Special handling for Text Size in general category
+              if (selectedCategory === 'general' && option.label === 'Text Size') {
+                return (
+                  <div key={index} className="bg-white p-6 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium">{option.label}</h3>
+                      {isSaving && <span className="text-xs text-gray-500">Saving...</span>}
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4">{option.description}</p>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm">A</span>
+                      <div className="flex-1 relative">
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={settings.textSize}
+                          onChange={handleTextSizeChange}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-black rounded-full pointer-events-none"
+                          style={{ left: `calc(${settings.textSize}% - 12px)` }}
+                        />
+                      </div>
+                      <span className="text-xl">A</span>
+                    </div>
                   </div>
-                  <span className="text-xl">A</span>
-                </div>
-              </div>
+                );
+              }
 
-              {/* Other Settings */}
-              {settingsOptions[selectedCategory].slice(1).map((option, index) => (
+              // Standard setting option
+              return (
                 <div key={index} className="bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-medium">{option}</h3>
+                  <h3 className="text-lg font-medium">{option.label}</h3>
+                  <p className="text-gray-600 mt-2">{option.description}</p>
                 </div>
-              ))}
-            </>
-          )}
-
-          {selectedCategory !== 'general' && (
-            settingsOptions[selectedCategory].map((option, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-medium">{option}</h3>
-                <p className="text-gray-600 mt-2">Placeholder content for {option}</p>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

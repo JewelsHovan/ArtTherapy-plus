@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../components/common/Logo';
+import LoadingButton from '../components/common/LoadingButton';
 import { painPlusAPI } from '../services/api';
 
 const PainDescription = () => {
@@ -198,30 +199,22 @@ const PainDescription = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
+            <LoadingButton
               onClick={handleVisualize}
-              disabled={isLoading}
-              className="px-8 py-3 bg-primary text-white rounded-xl font-semibold text-lg
-                hover:bg-primary-hover transform hover:-translate-y-1 transition-all duration-300
-                shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-                disabled:transform-none min-w-[200px]"
+              isLoading={isLoading && loadingAction === 'visualize'}
+              loadingText="Creating Art..."
+              disabled={!painDescription.trim()}
+              variant="primary"
+              className="px-8 py-3 rounded-xl font-semibold text-lg min-w-[200px] transform hover:-translate-y-1 disabled:transform-none"
             >
-              {isLoading && loadingAction === 'visualize' ? (
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-gray-600 mb-2">Creating your artwork...</p>
-                  <p className="text-sm text-gray-500">This usually takes 15-30 seconds</p>
-                </div>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Visualize Pain
-                </span>
-              )}
-            </button>
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Visualize Pain
+              </span>
+            </LoadingButton>
 
             <button
               onClick={handlePrompt}

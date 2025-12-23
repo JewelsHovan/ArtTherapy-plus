@@ -48,6 +48,16 @@ const Edit = () => {
     setStep(2); // Go back to describe step
   };
 
+  const handleRetry = () => {
+    setError(null);
+    handleTransform(); // Re-run the transformation
+  };
+
+  const handleGoBack = () => {
+    setError(null);
+    setStep(2); // Go back to describe step
+  };
+
   const handleTransform = async () => {
     if (!uploadedImage || !painDescription.trim()) {
       setError("Please upload an image and describe your pain");
@@ -196,7 +206,7 @@ const Edit = () => {
         </div>
 
         {/* Error Display */}
-        {error && (
+        {error && step !== 3 && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 animate-fadeIn">
             <p className="font-medium">Error</p>
             <p className="text-sm">{error}</p>
@@ -279,6 +289,43 @@ const Edit = () => {
                 transformationStages={TRANSFORMATION_STAGES}
                 onCancelTransformation={handleCancelTransformation}
               />
+
+              {/* Error Recovery Options */}
+              {error && !isLoading && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center mt-6">
+                  <svg
+                    className="w-12 h-12 text-red-400 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">
+                    Transformation Failed
+                  </h3>
+                  <p className="text-red-600 mb-6">{error}</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={handleRetry}
+                      className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      Try Again
+                    </button>
+                    <button
+                      onClick={handleGoBack}
+                      className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Go Back to Edit
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {transformedImage && !isLoading && (
                 <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
