@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../components/common/Logo';
 import { painPlusAPI } from '../services/api';
 
 const PainDescription = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [painDescription, setPainDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState('');
@@ -23,12 +24,20 @@ const PainDescription = () => {
 
   const [currentExample, setCurrentExample] = useState(0);
 
+  // Check if coming from Inspire page with a prefilled description
+  useEffect(() => {
+    if (location.state?.prefilledDescription) {
+      setPainDescription(location.state.prefilledDescription);
+      setCharCount(location.state.prefilledDescription.length);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentExample((prev) => (prev + 1) % examplePrompts.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [examplePrompts.length]);
 
   const handlePrompt = async () => {
     if (!painDescription.trim()) {
@@ -134,7 +143,7 @@ const PainDescription = () => {
                 placeholder={examplePrompts[currentExample]}
                 className="w-full h-32 px-6 py-4 text-lg bg-gray-50
                   border-2 border-gray-200 rounded-xl resize-none
-                  focus:outline-none focus:border-[#3B82F6] focus:bg-white
+                  focus:outline-none focus:border-primary focus:bg-white
                   transition-all duration-300 placeholder:text-gray-400"
               />
               <div className="absolute bottom-3 right-3 text-sm text-gray-500">
@@ -169,8 +178,8 @@ const PainDescription = () => {
             <button
               onClick={handleVisualize}
               disabled={isLoading}
-              className="px-8 py-3 bg-[#3B82F6] text-white rounded-xl font-semibold text-lg
-                hover:bg-[#2563EB] transform hover:-translate-y-1 transition-all duration-300
+              className="px-8 py-3 bg-primary text-white rounded-xl font-semibold text-lg
+                hover:bg-primary-hover transform hover:-translate-y-1 transition-all duration-300
                 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
                 disabled:transform-none min-w-[200px]"
             >
@@ -196,9 +205,9 @@ const PainDescription = () => {
             <button
               onClick={handlePrompt}
               disabled={isLoading}
-              className="px-8 py-3 bg-transparent border-2 border-[#3B82F6] 
-                text-[#3B82F6] rounded-xl font-semibold text-lg
-                hover:bg-[#3B82F6] hover:text-white transform hover:-translate-y-1 
+              className="px-8 py-3 bg-transparent border-2 border-primary
+                text-primary rounded-xl font-semibold text-lg
+                hover:bg-primary hover:text-white transform hover:-translate-y-1 
                 transition-all duration-300 shadow-md hover:shadow-lg
                 disabled:opacity-50 disabled:cursor-not-allowed
                 disabled:transform-none min-w-[200px]"
