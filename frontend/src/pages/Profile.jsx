@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   
   const profileFields = [

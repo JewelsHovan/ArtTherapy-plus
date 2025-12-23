@@ -28,12 +28,18 @@ export default function Registration() {
       const clientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
       const redirectUri = `${window.location.origin}/oauth-callback.html`;
 
+      if (!clientId) {
+        setError('Microsoft Client ID not configured. Check VITE_MICROSOFT_CLIENT_ID.');
+        setIsLoading(false);
+        return;
+      }
+
       const authUrl =
         `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${clientId}&` +
         `response_type=code&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${encodeURIComponent('openid email profile')}&` +
+        `scope=${encodeURIComponent('openid email profile User.Read')}&` +
         `response_mode=query`;
 
       // Open OAuth popup
@@ -48,10 +54,16 @@ export default function Registration() {
         `width=${width},height=${height},left=${left},top=${top}`
       );
 
+      if (!popup) {
+        setError('Popup was blocked. Please allow popups for this site.');
+        setIsLoading(false);
+        return;
+      }
+
       // Listen for OAuth callback message
       const handleMessage = async (event) => {
         // Security: verify origin
-        if (!event.origin.startsWith(window.location.origin)) {
+        if (event.origin !== window.location.origin) {
           return;
         }
 
@@ -66,9 +78,15 @@ export default function Registration() {
             return;
           }
 
+          if (!code) {
+            setError('Authentication failed. No authorization code received.');
+            setIsLoading(false);
+            return;
+          }
+
           try {
-            // Exchange code for JWT
-            const response = await painPlusAPI.auth.microsoftCallback(code);
+            // Exchange code for JWT - send redirectUri to match token exchange
+            const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri);
             const { token, user } = response.data;
 
             // Update auth context
@@ -77,8 +95,8 @@ export default function Registration() {
             // Redirect to authenticated home
             navigate('/mode');
           } catch (err) {
-            console.error('OAuth callback error:', err);
-            setError('Authentication failed. Please try again.');
+            const errorMsg = err.response?.data?.error || err.message;
+            setError(`Authentication failed: ${errorMsg}`);
             setIsLoading(false);
           }
         }

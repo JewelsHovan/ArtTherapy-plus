@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
         setToken(storedToken);
         setUser(userData);
         setIsAuthenticated(true);
+      // eslint-disable-next-line no-unused-vars
       } catch (error) {
         // Token invalid or expired - clear it
         localStorage.removeItem('auth_token');
@@ -71,6 +72,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
