@@ -121,6 +121,19 @@ export default function Registration() {
     }
   };
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailBlur = () => {
+    if (formData.email && !validateEmail(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+    } else {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -146,10 +159,9 @@ export default function Registration() {
     const newErrors = {};
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
+    } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
@@ -274,6 +286,7 @@ export default function Registration() {
                   type="text"
                   id="name"
                   name="name"
+                  autoFocus
                   value={formData.name}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
@@ -296,8 +309,10 @@ export default function Registration() {
                 type="email"
                 id="email"
                 name="email"
+                autoFocus={mode === 'login'}
                 value={formData.email}
                 onChange={handleInputChange}
+                onBlur={handleEmailBlur}
                 className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}

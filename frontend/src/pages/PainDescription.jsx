@@ -13,7 +13,10 @@ const PainDescription = () => {
   const [showPrompts, setShowPrompts] = useState(false);
   const [error, setError] = useState('');
   const [charCount, setCharCount] = useState(0);
+  const [charWarning, setCharWarning] = useState(false);
+  const [charLimitHit, setCharLimitHit] = useState(false);
   const maxChars = 500;
+  const warningThreshold = 450;
 
   const examplePrompts = [
     "Sharp stabbing sensation in my lower back that radiates down my left leg",
@@ -27,8 +30,10 @@ const PainDescription = () => {
   // Check if coming from Inspire page with a prefilled description
   useEffect(() => {
     if (location.state?.prefilledDescription) {
-      setPainDescription(location.state.prefilledDescription);
-      setCharCount(location.state.prefilledDescription.length);
+      const prefilled = location.state.prefilledDescription;
+      setPainDescription(prefilled);
+      setCharCount(prefilled.length);
+      setCharWarning(prefilled.length >= warningThreshold);
     }
   }, [location.state]);
 
@@ -97,6 +102,7 @@ const PainDescription = () => {
   const handleQuickPrompt = (prompt) => {
     setPainDescription(prompt);
     setCharCount(prompt.length);
+    setCharWarning(prompt.length >= warningThreshold);
   };
 
   return (
@@ -132,23 +138,40 @@ const PainDescription = () => {
           <div className="mb-8">
             <div className="relative">
               <textarea
+                autoFocus
                 value={painDescription}
                 onChange={(e) => {
-                  if (e.target.value.length <= maxChars) {
-                    setPainDescription(e.target.value);
-                    setCharCount(e.target.value.length);
+                  const newValue = e.target.value;
+
+                  // Update warning state
+                  setCharWarning(newValue.length >= warningThreshold);
+
+                  if (newValue.length <= maxChars) {
+                    setPainDescription(newValue);
+                    setCharCount(newValue.length);
                     setError('');
+                  } else {
+                    // Flash animation when hitting limit
+                    setCharLimitHit(true);
+                    setTimeout(() => setCharLimitHit(false), 300);
                   }
                 }}
                 placeholder={examplePrompts[currentExample]}
-                className="w-full h-32 px-6 py-4 text-lg bg-gray-50
-                  border-2 border-gray-200 rounded-xl resize-none
+                className={`w-full h-32 px-6 py-4 text-lg bg-gray-50
+                  border-2 rounded-xl resize-none
                   focus:outline-none focus:border-primary focus:bg-white
-                  transition-all duration-300 placeholder:text-gray-400"
+                  transition-all duration-300 placeholder:text-gray-400
+                  ${charWarning ? 'border-amber-300 bg-amber-50/30' : 'border-gray-200'}`}
               />
-              <div className="absolute bottom-3 right-3 text-sm text-gray-500">
+              <span className={`absolute bottom-3 right-3 text-sm transition-all duration-200 ${
+                charLimitHit
+                  ? 'text-red-500 animate-pulse font-bold scale-110'
+                  : charWarning
+                    ? 'text-amber-500 font-medium'
+                    : 'text-gray-400'
+              }`}>
                 {charCount}/{maxChars}
-              </div>
+              </span>
             </div>
             
             {error && (
