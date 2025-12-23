@@ -4,6 +4,7 @@
   <title>OAuth Callback</title>
 </head>
 <body>
+  <p id="status">Processing authentication...</p>
   <script>
     // Extract code or error from URL
     const params = new URLSearchParams(window.location.search);
@@ -11,20 +12,38 @@
     const error = params.get('error');
     const errorDescription = params.get('error_description');
 
+    console.log('OAuth callback page loaded');
+    console.log('Code:', code ? 'present' : 'missing');
+    console.log('Error:', error);
+    console.log('Opener:', window.opener ? 'present' : 'missing');
+
+    const statusEl = document.getElementById('status');
+
     // Send message to opener window
     if (window.opener) {
-      window.opener.postMessage(
-        {
-          type: 'microsoft-oauth-callback',
-          code,
-          error,
-          errorDescription
-        },
-        window.location.origin
-      );
-      window.close();
+      try {
+        window.opener.postMessage(
+          {
+            type: 'microsoft-oauth-callback',
+            code,
+            error,
+            errorDescription
+          },
+          window.location.origin
+        );
+        console.log('Message posted to opener');
+        statusEl.textContent = 'Authentication complete. Closing...';
+        setTimeout(() => window.close(), 500);
+      } catch (e) {
+        console.error('Failed to post message:', e);
+        statusEl.textContent = 'Error: ' + e.message;
+      }
     } else {
-      document.body.innerHTML = '<p>Authentication complete. You can close this window.</p>';
+      console.log('No opener window found');
+      statusEl.innerHTML = '<p>Authentication complete. Please close this window and return to the app.</p>';
+      if (code) {
+        statusEl.innerHTML += '<p style="color: orange;">Note: Could not communicate with main window. You may need to sign in again.</p>';
+      }
     }
   </script>
 </body>
