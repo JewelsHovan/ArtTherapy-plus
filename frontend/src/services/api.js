@@ -44,8 +44,8 @@ export const painPlusAPI = {
       api.post('/auth/signup', { email, password, name }),
     login: (email, password) =>
       api.post('/auth/login', { email, password }),
-    microsoftCallback: (code) =>
-      api.post('/auth/microsoft/callback', { code }),
+    microsoftCallback: (code, redirectUri) =>
+      api.post('/auth/microsoft/callback', { code, redirect_uri: redirectUri }),
     verifyToken: () =>
       api.post('/auth/verify'),
     logout: () =>

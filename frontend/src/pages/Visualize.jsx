@@ -45,11 +45,12 @@ const Visualize = () => {
     window.open(imageUrl, '_blank');
   };
 
-  const handleSaveToGallery = () => {
-    const saved = galleryStorage.save({
+  const handleSaveToGallery = async () => {
+    const saved = await galleryStorage.save({
       imageUrl,
       description,
-      promptUsed
+      promptUsed,
+      mode: 'create'
     });
     if (saved) {
       setIsSaved(true);

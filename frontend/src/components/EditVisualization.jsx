@@ -17,16 +17,15 @@ const EditVisualization = ({
     }
   }, [transformedImage, isLoading]);
 
-  const handleSaveToGallery = () => {
+  const handleSaveToGallery = async () => {
     if (transformedImage && painDescription) {
-      const saved = galleryStorage.save({
+      const saved = await galleryStorage.save({
         imageUrl: transformedImage,
         description: painDescription,
         promptUsed: `Therapeutic transformation based on: ${painDescription}`,
-        originalImage: originalImage,
-        isTransformation: true
+        mode: 'edit'
       });
-      
+
       if (saved) {
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 3000);

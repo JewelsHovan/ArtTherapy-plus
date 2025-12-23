@@ -8,14 +8,25 @@ const Gallery = () => {
   const [galleryItems, setGalleryItems] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadGallery();
   }, []);
 
-  const loadGallery = () => {
-    const items = galleryStorage.getAll();
-    setGalleryItems(items);
+  const loadGallery = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const items = await galleryStorage.getAll();
+      setGalleryItems(items);
+    } catch (err) {
+      console.error('Failed to load gallery:', err);
+      setError('Failed to load your gallery. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleImageClick = (item) => {
@@ -28,18 +39,52 @@ const Gallery = () => {
     setTimeout(() => setSelectedImage(null), 300);
   };
 
-  const handleDeleteImage = (id, e) => {
+  const handleDeleteImage = async (id, e) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this artwork?')) {
-      galleryStorage.delete(id);
-      loadGallery();
+      const success = await galleryStorage.delete(id);
+      if (success) {
+        setGalleryItems(prev => prev.filter(item => item.id !== id));
+      }
     }
   };
 
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
+  const handleReflect = (item, e) => {
+    e.stopPropagation();
+    navigate('/reflect', { state: { galleryItem: item } });
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString();
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your gallery...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={loadGallery}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8">
@@ -57,12 +102,12 @@ const Gallery = () => {
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg
                   hover:bg-gray-200 transition-all duration-300 font-medium"
               >
-                ← Back
+                Back
               </button>
               <button
                 onClick={() => navigate('/mode')}
-                className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg
-                  hover:bg-[#2563EB] transition-all duration-300 font-medium shadow-md"
+                className="px-4 py-2 bg-primary text-white rounded-lg
+                  hover:bg-primary-hover transition-all duration-300 font-medium shadow-md"
               >
                 Create New
               </button>
@@ -81,8 +126,8 @@ const Gallery = () => {
               <p className="text-gray-500 mb-6">Start creating your visual pain journey</p>
               <button
                 onClick={() => navigate('/mode')}
-                className="px-6 py-3 bg-[#F59E0B] text-white rounded-lg
-                  hover:bg-[#D97706] transition-all duration-300 font-medium shadow-md"
+                className="px-6 py-3 bg-secondary text-white rounded-lg
+                  hover:bg-secondary-hover transition-all duration-300 font-medium shadow-md"
               >
                 Create Your First Artwork
               </button>
@@ -98,8 +143,8 @@ const Gallery = () => {
                 onClick={() => handleImageClick(item)}
               >
                 <div className="relative aspect-square">
-                  <img 
-                    src={item.imageUrl} 
+                  <img
+                    src={item.imageUrl}
                     alt="Generated artwork"
                     className="w-full h-full object-cover"
                   />
@@ -108,6 +153,15 @@ const Gallery = () => {
                       <p className="text-sm font-medium line-clamp-2">{item.description}</p>
                     </div>
                   </div>
+                  <button
+                    onClick={(e) => handleReflect(item, e)}
+                    className="absolute top-2 left-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    title="Reflect on artwork"
+                  >
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </button>
                   <button
                     onClick={(e) => handleDeleteImage(item.id, e)}
                     className="absolute top-2 right-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -119,7 +173,7 @@ const Gallery = () => {
                   </button>
                 </div>
                 <div className="p-4 bg-white">
-                  <p className="text-sm text-gray-500">{formatDate(item.timestamp)}</p>
+                  <p className="text-sm text-gray-500">{formatDate(item.createdAt)}</p>
                 </div>
               </div>
             ))}
@@ -135,7 +189,7 @@ const Gallery = () => {
         )}
 
         {selectedImage && (
-          <ImageModal 
+          <ImageModal
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             imageData={selectedImage}

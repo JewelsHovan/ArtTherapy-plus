@@ -1,6 +1,10 @@
 import { handleMicrosoftCallback, handleVerifyToken, handleLogout, handleSignup, handleLogin } from './handlers/auth.js';
+import { handleSaveGalleryItem, handleGetGalleryItems, handleDeleteGalleryItem } from './handlers/gallery.js';
+import { handleCreateJournalEntry, handleGetJournalEntries } from './handlers/journal.js';
 import { handleCORS, errorResponse, jsonResponse } from './utils/response.js';
 import { checkRateLimit, getRateLimitHeaders } from './middleware/rateLimit.js';
+import { verifyAuth } from './middleware/auth.js';
+import { generateImageKey, storeImageFromUrl, getPublicUrl } from './utils/storage.js';
 import OpenAI from 'openai';
 
 export default {
@@ -67,11 +71,45 @@ export default {
         return await handleLogout(origin);
       }
 
-      // TODO: Add protected endpoints for gallery, user, journal in Phase 2 & 3
-      // These will use verifyAuth middleware
+      // ==========================================
+      // PROTECTED ENDPOINTS - Require Authentication
+      // ==========================================
 
-      // OpenAI endpoints (public for now, will be protected in Phase 2)
-      // TODO: These endpoints will require authentication in Phase 2
+      // Check authentication for all /api/generate/*, /api/reflect, /api/inspire, /api/edit/*, /api/gallery endpoints
+      const protectedPaths = ['/api/generate/', '/api/reflect', '/api/inspire', '/api/edit/', '/api/gallery', '/api/journal'];
+      const isProtectedPath = protectedPaths.some(p => path.startsWith(p));
+
+      let authenticatedUser = null;
+      if (isProtectedPath) {
+        const authResult = await verifyAuth(request, env);
+        if (!authResult.valid) {
+          return errorResponse(authResult.error, authResult.code, 401, origin);
+        }
+        authenticatedUser = authResult.user;
+      }
+
+      // Gallery endpoints (protected)
+      if (path === '/api/gallery' && request.method === 'POST') {
+        return await handleSaveGalleryItem(request, env, authenticatedUser, origin);
+      }
+
+      if (path === '/api/gallery' && request.method === 'GET') {
+        return await handleGetGalleryItems(request, env, authenticatedUser, origin);
+      }
+
+      if (path.startsWith('/api/gallery/') && request.method === 'DELETE') {
+        const itemId = path.split('/api/gallery/')[1];
+        return await handleDeleteGalleryItem(request, env, authenticatedUser, itemId, origin);
+      }
+
+      // Journal endpoints (protected)
+      if (path === '/api/journal' && request.method === 'POST') {
+        return await handleCreateJournalEntry(request, env, authenticatedUser, origin);
+      }
+
+      if (path === '/api/journal' && request.method === 'GET') {
+        return await handleGetJournalEntries(request, env, authenticatedUser, origin);
+      }
 
       // Initialize OpenAI client
       const openai = new OpenAI({
@@ -99,8 +137,28 @@ export default {
           n: 1,
         });
 
-        const imageUrl = response.data[0].url;
+        const dalleUrl = response.data[0].url;
         const revisedPrompt = response.data[0].revised_prompt || artisticPrompt;
+
+        // Store image in R2 for permanent access (DALL-E URLs expire after ~1 hour)
+        let imageUrl = dalleUrl; // Fallback to DALL-E URL if R2 fails
+
+        if (env.IMAGES && env.R2_PUBLIC_URL) {
+          // Use authenticated user ID for storage path
+          const userId = authenticatedUser?.id || 'anonymous';
+          const imageKey = generateImageKey(userId, 'generated');
+          const storeResult = await storeImageFromUrl(env.IMAGES, dalleUrl, imageKey, {
+            userId: userId,
+            description: painDescription,
+            prompt: revisedPrompt,
+          });
+
+          if (storeResult.success) {
+            imageUrl = getPublicUrl(imageKey, env.R2_PUBLIC_URL);
+          } else {
+            console.warn('R2 storage failed, using DALL-E URL:', storeResult.error);
+          }
+        }
 
         return jsonResponse({
           success: true,
@@ -263,12 +321,33 @@ export default {
             n: 1,
           });
 
-          const generatedImageUrl = imageResponse.data[0].url;
+          const dalleUrl = imageResponse.data[0].url;
           const revisedPrompt = imageResponse.data[0].revised_prompt || combinedPrompt;
+
+          // Store image in R2 for permanent access
+          let editedImageUrl = dalleUrl; // Fallback to DALL-E URL if R2 fails
+
+          if (env.IMAGES && env.R2_PUBLIC_URL) {
+            // Use authenticated user ID for storage path
+            const userId = authenticatedUser?.id || 'anonymous';
+            const imageKey = generateImageKey(userId, 'edited');
+            const storeResult = await storeImageFromUrl(env.IMAGES, dalleUrl, imageKey, {
+              userId: userId,
+              description: painDescription,
+              styleAnalysis: styleAnalysis,
+              prompt: revisedPrompt,
+            });
+
+            if (storeResult.success) {
+              editedImageUrl = getPublicUrl(imageKey, env.R2_PUBLIC_URL);
+            } else {
+              console.warn('R2 storage failed, using DALL-E URL:', storeResult.error);
+            }
+          }
 
           return jsonResponse({
             success: true,
-            edited_image_url: generatedImageUrl,
+            edited_image_url: editedImageUrl,
             prompt_used: revisedPrompt,
             original_description: painDescription,
             style_analysis: styleAnalysis,
