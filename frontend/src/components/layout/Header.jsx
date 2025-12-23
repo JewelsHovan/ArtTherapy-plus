@@ -40,12 +40,12 @@ export default function Header() {
   }, [isDropdownOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+    <header className="fixed top-0 left-0 right-0 bg-white/70 backdrop-blur-lg border-b border-gray-200/50 shadow-soft z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <Logo />
+            <Logo size="large" showText={true} />
           </Link>
 
           {/* User menu (only show if authenticated) */}
@@ -101,7 +101,7 @@ export default function Header() {
               {/* Dropdown menu */}
               {isDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200"
+                  className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-lg rounded-xl shadow-soft-lg py-2 border border-gray-200/50"
                   role="menu"
                   aria-orientation="vertical"
                 >
