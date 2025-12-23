@@ -1,11 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { painPlusAPI } from '../services/api';
 
 const Settings = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('general');
-  const [textSize, setTextSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState('');
+  const [settings, setSettings] = useState({ textSize: 50 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const response = await painPlusAPI.user.getProfile();
+      const userSettings = response.data.profile?.settings || {};
+      setSettings({
+        textSize: userSettings.textSize ?? 50,
+        ...userSettings
+      });
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateSetting = async (key, value) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    setIsSaving(true);
+
+    try {
+      await painPlusAPI.user.updateProfile({ settings: newSettings });
+    } catch (err) {
+      console.error('Failed to save setting:', err);
+      // Revert on failure
+      setSettings(settings);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTextSizeChange = (e) => {
+    const size = parseInt(e.target.value);
+    updateSetting('textSize', size);
+  };
 
   const categories = [
     { id: 'general', label: 'General', icon: '⚙️' },
@@ -43,12 +87,28 @@ const Settings = () => {
     ]
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6">
+    <div className="min-h-screen bg-gray-50 lg:flex">
+      {/* Mobile header */}
+      <div className="lg:hidden bg-white border-b border-gray-200 p-4">
+        <h1 className="text-xl font-bold">Settings</h1>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-6">
         <h1 className="text-2xl font-bold mb-8">Settings</h1>
-        
+
         <nav className="space-y-2">
           {categories.map((category) => (
             <button
@@ -68,7 +128,7 @@ const Settings = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 pt-20">
+      <div className="flex-1 p-4 lg:p-8">
         {/* User Info Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Account Settings</h2>
@@ -118,7 +178,10 @@ const Settings = () => {
             <>
               {/* Text Size Slider */}
               <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-medium mb-4">Text Size</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Text Size</h3>
+                  {isSaving && <span className="text-xs text-gray-500">Saving...</span>}
+                </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm">A</span>
                   <div className="flex-1 relative">
@@ -126,13 +189,13 @@ const Settings = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={textSize}
-                      onChange={(e) => setTextSize(e.target.value)}
-                      className="w-full"
+                      value={settings.textSize}
+                      onChange={handleTextSizeChange}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-black rounded-full"
-                      style={{ left: `${textSize}%` }}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-black rounded-full pointer-events-none"
+                      style={{ left: `calc(${settings.textSize}% - 12px)` }}
                     />
                   </div>
                   <span className="text-xl">A</span>

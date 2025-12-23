@@ -4,6 +4,7 @@ import ImageUploader from "../components/ImageUploader";
 import EditPromptInput from "../components/EditPromptInput";
 import EditVisualization from "../components/EditVisualization";
 import { painPlusAPI } from "../services/api";
+import { galleryStorage } from "../utils/storage";
 
 const Edit = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Edit = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Upload, 2: Describe, 3: View
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleImageUpload = (processedImage) => {
     setUploadedImage(processedImage);
@@ -50,22 +52,42 @@ const Edit = () => {
     }
   };
 
+  const handleSaveToGallery = async () => {
+    if (!transformedImage || !painDescription) return;
+
+    try {
+      const saved = await galleryStorage.save({
+        imageUrl: transformedImage,
+        description: painDescription,
+        promptUsed: painDescription,
+        mode: 'edit'
+      });
+      if (saved) {
+        setIsSaved(true);
+      }
+    } catch (err) {
+      console.error('Failed to save to gallery:', err);
+      setError('Failed to save to gallery. Please try again.');
+    }
+  };
+
   const resetProcess = () => {
     setUploadedImage(null);
     setPainDescription("");
     setTransformedImage(null);
     setError(null);
     setStep(1);
+    setIsSaved(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
           <button
             onClick={() => navigate("/")}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 mb-4 transition-colors"
+            className="inline-flex items-center text-primary hover:text-primary-hover mb-4 transition-colors"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -97,11 +119,11 @@ const Edit = () => {
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4">
             <div
-              className={`flex items-center ${step >= 1 ? "text-purple-600" : "text-gray-400"}`}
+              className={`flex items-center ${step >= 1 ? "text-primary" : "text-gray-400"}`}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                ${step >= 1 ? "border-purple-600 bg-purple-100" : "border-gray-300 bg-white"}`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2
+                ${step >= 1 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
               >
                 1
               </div>
@@ -109,15 +131,15 @@ const Edit = () => {
             </div>
 
             <div
-              className={`w-16 h-0.5 ${step >= 2 ? "bg-purple-600" : "bg-gray-300"}`}
+              className={`w-16 h-0.5 ${step >= 2 ? "bg-primary" : "bg-gray-300"}`}
             />
 
             <div
-              className={`flex items-center ${step >= 2 ? "text-purple-600" : "text-gray-400"}`}
+              className={`flex items-center ${step >= 2 ? "text-primary" : "text-gray-400"}`}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                ${step >= 2 ? "border-purple-600 bg-purple-100" : "border-gray-300 bg-white"}`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2
+                ${step >= 2 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
               >
                 2
               </div>
@@ -125,15 +147,15 @@ const Edit = () => {
             </div>
 
             <div
-              className={`w-16 h-0.5 ${step >= 3 ? "bg-purple-600" : "bg-gray-300"}`}
+              className={`w-16 h-0.5 ${step >= 3 ? "bg-primary" : "bg-gray-300"}`}
             />
 
             <div
-              className={`flex items-center ${step >= 3 ? "text-purple-600" : "text-gray-400"}`}
+              className={`flex items-center ${step >= 3 ? "text-primary" : "text-gray-400"}`}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                ${step >= 3 ? "border-purple-600 bg-purple-100" : "border-gray-300 bg-white"}`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2
+                ${step >= 3 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
               >
                 3
               </div>
@@ -215,14 +237,6 @@ const Edit = () => {
                 <h2 className="text-2xl font-semibold text-gray-800">
                   Your Therapeutic Transformation
                 </h2>
-                {!isLoading && (
-                  <button
-                    onClick={resetProcess}
-                    className="text-purple-600 hover:text-purple-800 font-medium"
-                  >
-                    Start New Transformation
-                  </button>
-                )}
               </div>
 
               <EditVisualization
@@ -231,6 +245,29 @@ const Edit = () => {
                 transformedImage={transformedImage}
                 isLoading={isLoading}
               />
+
+              {transformedImage && !isLoading && (
+                <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                  {!isSaved ? (
+                    <button
+                      onClick={handleSaveToGallery}
+                      className="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary-hover transition-all duration-300 font-medium shadow-md"
+                    >
+                      Save to Gallery
+                    </button>
+                  ) : (
+                    <div className="px-6 py-3 bg-green-50 text-green-700 rounded-lg font-medium text-center">
+                      ✓ Saved to Gallery
+                    </div>
+                  )}
+                  <button
+                    onClick={resetProcess}
+                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 font-medium"
+                  >
+                    Start New Transformation
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
