@@ -275,7 +275,7 @@ export default function Registration() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                   placeholder="Your name"
@@ -297,7 +297,7 @@ export default function Registration() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                 placeholder="your.email@example.com"
@@ -318,7 +318,7 @@ export default function Registration() {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                 placeholder="At least 8 characters"
@@ -340,7 +340,7 @@ export default function Registration() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+                  className={`w-full px-4 py-3 bg-white text-gray-800 placeholder-gray-500 rounded-lg border-2 ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                   } outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
                   placeholder="Re-enter your password"

@@ -179,12 +179,14 @@ const Edit = () => {
                       onClick={() => setStep(1)}
                       className="absolute -top-2 -right-2 bg-gray-600 text-white p-1 rounded-full hover:bg-gray-700"
                       title="Change image"
+                      aria-label="Change image"
                     >
                       <svg
                         className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"

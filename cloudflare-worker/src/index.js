@@ -1,6 +1,7 @@
 import { handleMicrosoftCallback, handleVerifyToken, handleLogout, handleSignup, handleLogin } from './handlers/auth.js';
 import { handleSaveGalleryItem, handleGetGalleryItems, handleDeleteGalleryItem } from './handlers/gallery.js';
 import { handleCreateJournalEntry, handleGetJournalEntries } from './handlers/journal.js';
+import { handleGetProfile, handleUpdateProfile } from './handlers/user.js';
 import { handleCORS, errorResponse, jsonResponse } from './utils/response.js';
 import { checkRateLimit, getRateLimitHeaders } from './middleware/rateLimit.js';
 import { verifyAuth } from './middleware/auth.js';
@@ -75,8 +76,8 @@ export default {
       // PROTECTED ENDPOINTS - Require Authentication
       // ==========================================
 
-      // Check authentication for all /api/generate/*, /api/reflect, /api/inspire, /api/edit/*, /api/gallery endpoints
-      const protectedPaths = ['/api/generate/', '/api/reflect', '/api/inspire', '/api/edit/', '/api/gallery', '/api/journal'];
+      // Check authentication for all /api/generate/*, /api/reflect, /api/inspire, /api/edit/*, /api/gallery, /api/journal, /api/user endpoints
+      const protectedPaths = ['/api/generate/', '/api/reflect', '/api/inspire', '/api/edit/', '/api/gallery', '/api/journal', '/api/user'];
       const isProtectedPath = protectedPaths.some(p => path.startsWith(p));
 
       let authenticatedUser = null;
@@ -109,6 +110,15 @@ export default {
 
       if (path === '/api/journal' && request.method === 'GET') {
         return await handleGetJournalEntries(request, env, authenticatedUser, origin);
+      }
+
+      // User profile endpoints (protected)
+      if (path === '/api/user/profile' && request.method === 'GET') {
+        return await handleGetProfile(request, env, authenticatedUser, origin);
+      }
+
+      if (path === '/api/user/profile' && request.method === 'PUT') {
+        return await handleUpdateProfile(request, env, authenticatedUser, origin);
       }
 
       // Initialize OpenAI client

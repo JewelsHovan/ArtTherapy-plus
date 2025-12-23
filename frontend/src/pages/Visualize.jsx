@@ -14,6 +14,7 @@ const Visualize = () => {
   const [showReflection, setShowReflection] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!imageUrl) {
@@ -23,6 +24,7 @@ const Visualize = () => {
 
   const handleReflect = async () => {
     setIsLoading(true);
+    setError(''); // Clear previous errors
     try {
       const response = await painPlusAPI.reflect(description, promptUsed);
       if (response.success) {
@@ -31,6 +33,7 @@ const Visualize = () => {
       }
     } catch (err) {
       console.error('Error generating reflection questions:', err);
+      setError('Failed to generate reflection questions. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -111,8 +114,9 @@ const Visualize = () => {
                 onClick={handleSaveImage}
                 className="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-lg transition-all"
                 title="Save Image"
+                aria-label="Save image to device"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </button>
@@ -130,6 +134,11 @@ const Visualize = () => {
             {/* Action Buttons */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-semibold text-primary mb-4">What would you like to do?</h3>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4">
+                  {error}
+                </div>
+              )}
               <div className="space-y-3">
                 {!isSaved && (
                   <Button 
