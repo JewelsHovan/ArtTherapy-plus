@@ -13,8 +13,10 @@
     const errorDescription = params.get('error_description');
 
     console.log('OAuth callback page loaded');
+    console.log('Full URL:', window.location.href);
     console.log('Code:', code ? 'present' : 'missing');
     console.log('Error:', error);
+    console.log('Error Description:', errorDescription);
     console.log('Opener:', window.opener ? 'present' : 'missing');
 
     const statusEl = document.getElementById('status');
@@ -40,9 +42,21 @@
       }
     } else {
       console.log('No opener window found');
-      statusEl.innerHTML = '<p>Authentication complete. Please close this window and return to the app.</p>';
-      if (code) {
-        statusEl.innerHTML += '<p style="color: orange;">Note: Could not communicate with main window. You may need to sign in again.</p>';
+
+      if (error) {
+        statusEl.innerHTML = `
+          <p style="color: red; font-weight: bold;">Authentication Error</p>
+          <p><strong>Error:</strong> ${error}</p>
+          <p><strong>Description:</strong> ${errorDescription || 'No description provided'}</p>
+          <p style="margin-top: 20px;">Please close this window and try again.</p>
+        `;
+      } else if (code) {
+        statusEl.innerHTML = `
+          <p>Authentication complete. Please close this window and return to the app.</p>
+          <p style="color: orange;">Note: Could not communicate with main window. You may need to sign in again.</p>
+        `;
+      } else {
+        statusEl.innerHTML = '<p>Authentication complete. Please close this window and return to the app.</p>';
       }
     }
   </script>
