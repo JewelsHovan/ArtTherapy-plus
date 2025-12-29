@@ -90,60 +90,96 @@ export default function Registration() {
         return;
       }
 
-      // Listen for OAuth callback message
-      const handleMessage = async (event) => {
-        // Security: verify origin
-        if (event.origin !== window.location.origin) {
+      // Clear any previous OAuth result
+      localStorage.removeItem('oauth_result');
+
+      // Process OAuth result (from localStorage or postMessage)
+      const processOAuthResult = async (code, oauthError) => {
+        if (oauthError) {
+          setError('Authentication failed. Please try again.');
+          setIsLoading(false);
           return;
         }
 
+        if (!code) {
+          setError('Authentication failed. No authorization code received.');
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          // Get code verifier from storage
+          const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+          sessionStorage.removeItem('pkce_code_verifier');
+
+          // Exchange code for JWT - send redirectUri and codeVerifier
+          const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri, codeVerifier);
+          const { token, user } = response.data;
+
+          // Update auth context
+          login(token, user);
+
+          // Redirect to authenticated home
+          navigate('/mode');
+        } catch (err) {
+          const errorMsg = err.response?.data?.error || err.message;
+          setError(`Authentication failed: ${errorMsg}`);
+          setIsLoading(false);
+        }
+      };
+
+      // Listen for OAuth callback via postMessage (works when opener is preserved)
+      const handleMessage = async (event) => {
+        if (event.origin !== window.location.origin) return;
         if (event.data.type === 'microsoft-oauth-callback') {
-          window.removeEventListener('message', handleMessage);
+          cleanup();
+          await processOAuthResult(event.data.code, event.data.error);
+        }
+      };
 
-          const { code, error: oauthError } = event.data;
-
-          if (oauthError) {
-            setError('Authentication failed. Please try again.');
-            setIsLoading(false);
-            return;
-          }
-
-          if (!code) {
-            setError('Authentication failed. No authorization code received.');
-            setIsLoading(false);
-            return;
-          }
-
-          try {
-            // Get code verifier from storage
-            const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
-            sessionStorage.removeItem('pkce_code_verifier');
-
-            // Exchange code for JWT - send redirectUri and codeVerifier
-            const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri, codeVerifier);
-            const { token, user } = response.data;
-
-            // Update auth context
-            login(token, user);
-
-            // Redirect to authenticated home
-            navigate('/mode');
-          } catch (err) {
-            const errorMsg = err.response?.data?.error || err.message;
-            setError(`Authentication failed: ${errorMsg}`);
-            setIsLoading(false);
+      // Poll localStorage for OAuth result (works when opener is lost)
+      const checkLocalStorage = async () => {
+        const result = localStorage.getItem('oauth_result');
+        if (result) {
+          localStorage.removeItem('oauth_result');
+          cleanup();
+          const data = JSON.parse(result);
+          // Only process if result is recent (within 30 seconds)
+          if (Date.now() - data.timestamp < 30000) {
+            await processOAuthResult(
+              data.type === 'success' ? data.code : null,
+              data.type === 'error' ? data.error : null
+            );
           }
         }
       };
 
+      // Cleanup function
+      let pollInterval;
+      let popupCheckInterval;
+      const cleanup = () => {
+        window.removeEventListener('message', handleMessage);
+        clearInterval(pollInterval);
+        clearInterval(popupCheckInterval);
+      };
+
       window.addEventListener('message', handleMessage);
 
+      // Poll localStorage every 500ms
+      pollInterval = setInterval(checkLocalStorage, 500);
+
       // Handle popup closed without completing
-      const checkPopup = setInterval(() => {
+      popupCheckInterval = setInterval(() => {
         if (popup.closed) {
-          clearInterval(checkPopup);
-          window.removeEventListener('message', handleMessage);
-          setIsLoading(false);
+          // Give localStorage check one more chance
+          setTimeout(() => {
+            checkLocalStorage();
+            if (!localStorage.getItem('oauth_result')) {
+              cleanup();
+              setIsLoading(false);
+            }
+          }, 500);
+          clearInterval(popupCheckInterval);
         }
       }, 500);
 

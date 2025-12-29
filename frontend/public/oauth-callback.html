@@ -2,9 +2,41 @@
 <html>
 <head>
   <title>OAuth Callback</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error { color: #ff6b6b; }
+  </style>
 </head>
 <body>
-  <p id="status">Processing authentication...</p>
+  <div class="container">
+    <div class="spinner" id="spinner"></div>
+    <p id="status">Completing sign-in...</p>
+  </div>
   <script>
     // Extract code or error from URL
     const params = new URLSearchParams(window.location.search);
@@ -12,51 +44,43 @@
     const error = params.get('error');
     const errorDescription = params.get('error_description');
 
-    console.log('OAuth callback page loaded');
-    console.log('Full URL:', window.location.href);
-    console.log('Code:', code ? 'present' : 'missing');
-    console.log('Error:', error);
-    console.log('Error Description:', errorDescription);
-    console.log('Opener:', window.opener ? 'present' : 'missing');
-
     const statusEl = document.getElementById('status');
+    const spinnerEl = document.getElementById('spinner');
 
-    // Send message to opener window
+    // Store result in localStorage for main window to pick up
+    // This approach works even when window.opener is lost (cross-origin navigation)
+    if (error) {
+      localStorage.setItem('oauth_result', JSON.stringify({
+        type: 'error',
+        error,
+        errorDescription,
+        timestamp: Date.now()
+      }));
+      spinnerEl.style.display = 'none';
+      statusEl.innerHTML = `<span class="error">Authentication failed: ${errorDescription || error}</span>`;
+      setTimeout(() => window.close(), 2000);
+    } else if (code) {
+      localStorage.setItem('oauth_result', JSON.stringify({
+        type: 'success',
+        code,
+        timestamp: Date.now()
+      }));
+      statusEl.textContent = 'Success! Closing...';
+      setTimeout(() => window.close(), 500);
+    } else {
+      spinnerEl.style.display = 'none';
+      statusEl.innerHTML = '<span class="error">No authorization code received</span>';
+    }
+
+    // Also try postMessage as fallback (works in some browsers)
     if (window.opener) {
       try {
         window.opener.postMessage(
-          {
-            type: 'microsoft-oauth-callback',
-            code,
-            error,
-            errorDescription
-          },
+          { type: 'microsoft-oauth-callback', code, error, errorDescription },
           window.location.origin
         );
-        console.log('Message posted to opener');
-        statusEl.textContent = 'Authentication complete. Closing...';
-        setTimeout(() => window.close(), 500);
       } catch (e) {
-        console.error('Failed to post message:', e);
-        statusEl.textContent = 'Error: ' + e.message;
-      }
-    } else {
-      console.log('No opener window found');
-
-      if (error) {
-        statusEl.innerHTML = `
-          <p style="color: red; font-weight: bold;">Authentication Error</p>
-          <p><strong>Error:</strong> ${error}</p>
-          <p><strong>Description:</strong> ${errorDescription || 'No description provided'}</p>
-          <p style="margin-top: 20px;">Please close this window and try again.</p>
-        `;
-      } else if (code) {
-        statusEl.innerHTML = `
-          <p>Authentication complete. Please close this window and return to the app.</p>
-          <p style="color: orange;">Note: Could not communicate with main window. You may need to sign in again.</p>
-        `;
-      } else {
-        statusEl.innerHTML = '<p>Authentication complete. Please close this window and return to the app.</p>';
+        console.log('postMessage fallback failed:', e);
       }
     }
   </script>
