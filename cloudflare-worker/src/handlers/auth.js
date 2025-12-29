@@ -14,7 +14,7 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
  */
 export async function handleMicrosoftCallback(request, env, origin = null) {
   try {
-    const { code, redirect_uri } = await request.json();
+    const { code, redirect_uri, code_verifier } = await request.json();
 
     if (!code) {
       return errorResponse('Authorization code is required', 'INVALID_REQUEST', 400, origin);
@@ -24,6 +24,24 @@ export async function handleMicrosoftCallback(request, env, origin = null) {
       return errorResponse('Redirect URI is required', 'INVALID_REQUEST', 400, origin);
     }
 
+    // Build token exchange parameters
+    // For SPA with PKCE, use code_verifier instead of client_secret
+    const tokenParams = {
+      client_id: env.MICROSOFT_CLIENT_ID,
+      code,
+      redirect_uri: redirect_uri,
+      grant_type: 'authorization_code',
+      scope: 'openid email profile User.Read'
+    };
+
+    // Use PKCE code_verifier for SPA flow (preferred)
+    // Fall back to client_secret for backward compatibility
+    if (code_verifier) {
+      tokenParams.code_verifier = code_verifier;
+    } else if (env.MICROSOFT_CLIENT_SECRET) {
+      tokenParams.client_secret = env.MICROSOFT_CLIENT_SECRET;
+    }
+
     // Exchange code for access token
     // IMPORTANT: redirect_uri must match exactly what was used in the authorization request
     const tokenResponse = await fetch(
@@ -31,14 +49,7 @@ export async function handleMicrosoftCallback(request, env, origin = null) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: env.MICROSOFT_CLIENT_ID,
-          client_secret: env.MICROSOFT_CLIENT_SECRET,
-          code,
-          redirect_uri: redirect_uri,
-          grant_type: 'authorization_code',
-          scope: 'openid email profile User.Read'
-        })
+        body: new URLSearchParams(tokenParams)
       }
     );
 

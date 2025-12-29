@@ -21,6 +21,26 @@ export default function Registration() {
   });
   const [errors, setErrors] = useState({});
 
+  // PKCE helper functions
+  const generateCodeVerifier = () => {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode(...array))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  };
+
+  const generateCodeChallenge = async (verifier) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  };
+
   const handleMicrosoftLogin = async () => {
     setIsLoading(true);
     setError('');
@@ -35,13 +55,22 @@ export default function Registration() {
         return;
       }
 
+      // Generate PKCE code verifier and challenge
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+      // Store code verifier for token exchange
+      sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+
       const authUrl =
         `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${clientId}&` +
         `response_type=code&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `scope=${encodeURIComponent('openid email profile User.Read')}&` +
-        `response_mode=query`;
+        `response_mode=query&` +
+        `code_challenge=${codeChallenge}&` +
+        `code_challenge_method=S256`;
 
       // Open OAuth popup
       const width = 500;
@@ -86,8 +115,12 @@ export default function Registration() {
           }
 
           try {
-            // Exchange code for JWT - send redirectUri to match token exchange
-            const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri);
+            // Get code verifier from storage
+            const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+            sessionStorage.removeItem('pkce_code_verifier');
+
+            // Exchange code for JWT - send redirectUri and codeVerifier
+            const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri, codeVerifier);
             const { token, user } = response.data;
 
             // Update auth context
