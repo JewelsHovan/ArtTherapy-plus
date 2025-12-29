@@ -4,78 +4,20 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
 
 /**
  * Handle Microsoft OAuth callback
- * Exchange authorization code for access token, fetch user profile,
- * create/load user from D1, and return JWT token
+ * Receives access_token from frontend (which did the PKCE token exchange),
+ * fetches user profile, creates/loads user from D1, and returns JWT token
  *
- * @param {Request} request - Incoming request with authorization code
+ * @param {Request} request - Incoming request with Microsoft access_token
  * @param {Object} env - Environment bindings (DB, secrets, etc.)
  * @param {string|null} origin - Request origin for CORS validation
  * @returns {Response} JSON response with token and user data
  */
 export async function handleMicrosoftCallback(request, env, origin = null) {
   try {
-    const { code, redirect_uri, code_verifier } = await request.json();
-
-    if (!code) {
-      return errorResponse('Authorization code is required', 'INVALID_REQUEST', 400, origin);
-    }
-
-    if (!redirect_uri) {
-      return errorResponse('Redirect URI is required', 'INVALID_REQUEST', 400, origin);
-    }
-
-    // Build token exchange parameters
-    // For SPA with PKCE, use code_verifier instead of client_secret
-    const tokenParams = {
-      client_id: env.MICROSOFT_CLIENT_ID,
-      code,
-      redirect_uri: redirect_uri,
-      grant_type: 'authorization_code',
-      scope: 'openid email profile User.Read'
-    };
-
-    // Use PKCE code_verifier for SPA flow (preferred)
-    // Fall back to client_secret for backward compatibility
-    if (code_verifier) {
-      tokenParams.code_verifier = code_verifier;
-    } else if (env.MICROSOFT_CLIENT_SECRET) {
-      tokenParams.client_secret = env.MICROSOFT_CLIENT_SECRET;
-    }
-
-    // Exchange code for access token
-    // IMPORTANT: redirect_uri must match exactly what was used in the authorization request
-    const tokenResponse = await fetch(
-      `https://login.microsoftonline.com/${env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(tokenParams)
-      }
-    );
-
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.json();
-      console.error('Microsoft token exchange failed:', JSON.stringify(errorData));
-      console.error('Request details:', {
-        client_id: env.MICROSOFT_CLIENT_ID,
-        redirect_uri: redirect_uri,
-        tenant: env.MICROSOFT_TENANT_ID
-      });
-      // Return detailed error for debugging
-      return errorResponse(
-        `Microsoft auth failed: ${errorData.error_description || errorData.error || 'Unknown error'}`,
-        'AUTH_FAILED',
-        401,
-        origin
-      );
-    }
-
-    const tokenData = await tokenResponse.json();
-    const { access_token } = tokenData;
+    const { access_token } = await request.json();
 
     if (!access_token) {
-      console.error('No access token in response:', JSON.stringify(tokenData));
-      return errorResponse('No access token received from Microsoft', 'AUTH_FAILED', 401, origin);
+      return errorResponse('Access token is required', 'INVALID_REQUEST', 400, origin);
     }
 
     // Get user profile from Microsoft Graph

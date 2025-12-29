@@ -112,8 +112,34 @@ export default function Registration() {
           const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
           sessionStorage.removeItem('pkce_code_verifier');
 
-          // Exchange code for JWT - send redirectUri and codeVerifier
-          const response = await painPlusAPI.auth.microsoftCallback(code, redirectUri, codeVerifier);
+          // For SPA + PKCE, we must exchange the code from the browser (not backend)
+          // Microsoft requires cross-origin token exchange for SPA apps
+          const tokenResponse = await fetch(
+            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                client_id: import.meta.env.VITE_MICROSOFT_CLIENT_ID,
+                code,
+                redirect_uri: redirectUri,
+                grant_type: 'authorization_code',
+                code_verifier: codeVerifier,
+                scope: 'openid email profile User.Read'
+              })
+            }
+          );
+
+          if (!tokenResponse.ok) {
+            const errorData = await tokenResponse.json();
+            throw new Error(errorData.error_description || errorData.error || 'Token exchange failed');
+          }
+
+          const tokenData = await tokenResponse.json();
+          const { access_token } = tokenData;
+
+          // Send access token to our backend to create/get user and issue our JWT
+          const response = await painPlusAPI.auth.microsoftCallback(access_token);
           const { token, user } = response.data;
 
           // Update auth context
