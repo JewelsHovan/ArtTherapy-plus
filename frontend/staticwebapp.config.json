@@ -1,0 +1,21 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/oauth-callback.html", "*.css", "*.js", "*.png", "*.jpg", "*.svg", "*.ico"]
+  },
+  "globalHeaders": {
+    "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    "Cross-Origin-Embedder-Policy": "unsafe-none"
+  },
+  "routes": [
+    {
+      "route": "/oauth-callback.html",
+      "headers": {
+        "Cross-Origin-Opener-Policy": "same-origin-allow-popups"
+      }
+    }
+  ],
+  "mimeTypes": {
+    ".json": "application/json"
+  }
+}
