@@ -54,6 +54,7 @@ export function errorResponse(message, code = 'ERROR', status = 500, origin = nu
 export function getCORSHeaders(origin) {
   const allowedOrigins = [
     'https://arttherapy-plus.pages.dev',
+    'https://witty-glacier-01b4b7710.2.azurestaticapps.net',
     'http://localhost:5173'
   ];
 
