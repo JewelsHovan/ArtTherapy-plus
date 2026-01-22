@@ -40,7 +40,7 @@ const EditVisualization = ({
     if (transformedImage) {
       const link = document.createElement('a');
       link.href = transformedImage;
-      link.download = `therapeutic-art-${Date.now()}.png`;
+      link.download = `art-${Date.now()}.png`;
       link.click();
     }
   };

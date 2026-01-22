@@ -151,7 +151,7 @@ const Edit = () => {
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Upload any image that resonates with you and describe your pain
-            experience. Our AI will create a therapeutic transformation that
+            experience. Our AI will create a transformation that
             maintains the artistic style while expressing your journey.
           </p>
         </div>
@@ -358,4 +358,3 @@ const Edit = () => {
 };
 
 export default Edit;
-

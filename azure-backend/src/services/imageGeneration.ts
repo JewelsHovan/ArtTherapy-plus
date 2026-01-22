@@ -135,7 +135,14 @@ export function getAvailableModels(): ImageModel[] {
   const models: ImageModel[] = ['dall-e-3']; // Always available
 
   if (config.openrouter?.apiKey) {
-    models.push('flux-pro', 'gemini-image');
+    models.push(
+      'gpt-5-image',
+      'gpt-5-image-mini',
+      'flux-pro',
+      'flux-2-max',
+      'gemini-image',
+      'gemini-3-pro-image-preview'
+    );
   }
 
   return models;
@@ -225,35 +232,54 @@ async function generateWithOpenRouter(
 
   const data = (await response.json()) as OpenRouterResponse;
 
+  const extractImageValue = (value: unknown): { base64?: string; url?: string } | null => {
+    if (!value) return null;
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith('data:image/')) return { base64: trimmed };
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return { url: trimmed };
+      if (trimmed.length > 1000) return { base64: trimmed };
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const extracted = extractImageValue(item);
+        if (extracted) return extracted;
+      }
+      return null;
+    }
+
+    if (typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      const candidates = [
+        obj.url,
+        (obj.image_url as { url?: unknown } | undefined)?.url,
+        obj.image_url,
+        obj.data,
+        obj.base64,
+        obj.b64_json,
+        obj.image,
+      ];
+      for (const candidate of candidates) {
+        const extracted = extractImageValue(candidate);
+        if (extracted) return extracted;
+      }
+    }
+
+    return null;
+  };
+
   // OpenRouter returns images in various formats depending on the model
   const content = data.choices?.[0]?.message?.content;
+  const contentResult = extractImageValue(content);
+  if (contentResult) return contentResult;
 
-  // Handle array content format (common for multimodal responses)
-  if (Array.isArray(content)) {
-    const imageContent = content.find(
-      (c: { type: string }) => c.type === 'image_url' || c.type === 'image'
-    ) as { type: string; image_url?: { url?: string } } | undefined;
-    if (imageContent?.image_url?.url) {
-      const imageUrl = imageContent.image_url.url;
-      // Check if it's a data URL (base64) or actual URL
-      if (imageUrl.startsWith('data:') || imageUrl.startsWith('/')) {
-        return { base64: imageUrl };
-      }
-      return { url: imageUrl };
-    }
-  }
-
-  // Handle inline_data format (some models)
   const images = data.choices?.[0]?.message?.images;
-  if (images?.[0]) {
-    return { base64: images[0] };
-  }
-
-  // Handle direct base64 in content
-  if (typeof content === 'string' && content.length > 1000) {
-    // Likely base64 data
-    return { base64: content };
-  }
+  const imagesResult = extractImageValue(images);
+  if (imagesResult) return imagesResult;
 
   throw new Error('No image returned from OpenRouter');
 }
@@ -278,7 +304,7 @@ export async function generateImage(
   if (!isValidModel(model)) {
     return {
       success: false,
-      error: `Invalid model: ${model}. Valid models are: dall-e-3, flux-pro, gemini-image`,
+      error: `Invalid model: ${model}. Valid models are: dall-e-3, gpt-5-image, gpt-5-image-mini, flux-pro, flux-2-max, gemini-image, gemini-3-pro-image-preview`,
       modelUsed: 'dall-e-3',
       styleUsed: 'default',
     };

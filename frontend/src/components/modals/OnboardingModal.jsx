@@ -11,7 +11,7 @@ const ONBOARDING_STEPS = [
     emoji: '✨',
     title: 'Choose Your Creative Mode',
     description:
-      'Create Original Art from your descriptions, Transform Your Images into therapeutic artwork, or let Inspire Me guide you with creative prompts when you need a starting point.',
+      'Create Original Art from your descriptions, Transform Your Images into artwork, or let Inspire Me guide you with creative prompts when you need a starting point.',
   },
   {
     emoji: '💭',

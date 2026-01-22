@@ -8,7 +8,14 @@
 /**
  * Available image generation models
  */
-export type ImageModel = 'dall-e-3' | 'flux-pro' | 'gemini-image';
+export type ImageModel =
+  | 'dall-e-3'
+  | 'flux-pro'
+  | 'flux-2-max'
+  | 'gemini-image'
+  | 'gemini-3-pro-image-preview'
+  | 'gpt-5-image-mini'
+  | 'gpt-5-image';
 
 /**
  * Available style presets for image generation
@@ -57,12 +64,36 @@ export const IMAGE_MODELS: ModelInfo[] = [
     costTier: 'high',
   },
   {
-    id: 'flux-pro',
-    name: 'Flux Pro',
-    description: 'High-quality artistic generation with unique aesthetic',
+    id: 'gpt-5-image',
+    name: 'GPT-5 Image',
+    description: 'Highest quality OpenAI image generation via OpenRouter',
     provider: 'openrouter',
-    openrouterId: 'black-forest-labs/flux-pro-1.1',
+    openrouterId: 'openai/gpt-5-image',
+    costTier: 'high',
+  },
+  {
+    id: 'gpt-5-image-mini',
+    name: 'GPT-5 Image Mini',
+    description: 'Fast, cost-effective OpenAI image generation via OpenRouter',
+    provider: 'openrouter',
+    openrouterId: 'openai/gpt-5-image-mini',
     costTier: 'medium',
+  },
+  {
+    id: 'flux-pro',
+    name: 'Flux 2 Klein 4B',
+    description: 'High-quality artistic generation via Flux 2 Klein 4B',
+    provider: 'openrouter',
+    openrouterId: 'black-forest-labs/flux.2-klein-4b',
+    costTier: 'medium',
+  },
+  {
+    id: 'flux-2-max',
+    name: 'Flux 2 Max',
+    description: 'High-end Flux model for detailed artistic results',
+    provider: 'openrouter',
+    openrouterId: 'black-forest-labs/flux.2-max',
+    costTier: 'high',
   },
   {
     id: 'gemini-image',
@@ -71,6 +102,14 @@ export const IMAGE_MODELS: ModelInfo[] = [
     provider: 'openrouter',
     openrouterId: 'google/gemini-2.0-flash-exp:free',
     costTier: 'low',
+  },
+  {
+    id: 'gemini-3-pro-image-preview',
+    name: 'Gemini 3 Pro Image (Preview)',
+    description: 'High-fidelity image generation (preview)',
+    provider: 'openrouter',
+    openrouterId: 'google/gemini-3-pro-image-preview',
+    costTier: 'high',
   },
 ];
 
@@ -85,21 +124,21 @@ export const STYLE_PRESETS: StylePresetInfo[] = [
     name: 'Art Therapy',
     description: 'Healing abstract art designed for emotional expression',
     promptTemplate:
-      'Create an abstract artistic representation of: {description}. Style: Abstract expressionist art therapy piece with vibrant colors that transform pain into beauty. Use flowing organic shapes, bold brushstrokes, and symbolic elements that represent healing and transformation. The artwork should be uplifting and therapeutic while acknowledging the pain experience.',
+      'Create an abstract artistic representation of: {description}. Style: Abstract expressionist art therapy piece with vibrant colors that transform pain into beauty. Use flowing organic shapes, bold brushstrokes, and symbolic elements that represent healing and transformation. The artwork should be uplifting while acknowledging the pain experience.',
   },
   {
     id: 'photorealism',
     name: 'Photorealism',
     description: 'Ultra-realistic imagery with stunning detail',
     promptTemplate:
-      'Create a photorealistic image representing: {description}. Ultra-detailed, professional photography quality, natural lighting, sharp focus, 8K resolution. Transform the emotional experience into tangible visual elements while maintaining therapeutic healing qualities.',
+      'Create a photorealistic image representing: {description}. Ultra-detailed, professional photography quality, natural lighting, sharp focus, 8K resolution. Transform the emotional experience into tangible visual elements while maintaining healing qualities.',
   },
   {
     id: 'oil-painting',
     name: 'Oil Painting',
     description: 'Classical painting style reminiscent of the Old Masters',
     promptTemplate:
-      'Create an oil painting in classical style expressing: {description}. Rich textures, visible brushstrokes, dramatic lighting, museum quality, reminiscent of the Old Masters. Layer emotions through color and composition to create a therapeutic visual narrative.',
+      'Create an oil painting in classical style expressing: {description}. Rich textures, visible brushstrokes, dramatic lighting, museum quality, reminiscent of the Old Masters. Layer emotions through color and composition to create a visual narrative.',
   },
   {
     id: 'watercolor',

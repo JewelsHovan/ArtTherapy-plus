@@ -137,7 +137,7 @@ export default {
         const artisticPrompt = `Create an abstract artistic representation of: ${painDescription}.
         Style: Abstract expressionist art therapy piece with vibrant colors that transform pain into beauty.
         Use flowing organic shapes, bold brushstrokes, and symbolic elements that represent healing and transformation.
-        The artwork should be uplifting and therapeutic while acknowledging the pain experience.`;
+        The artwork should be uplifting while acknowledging the pain experience.`;
 
         const response = await openai.images.generate({
           model: 'dall-e-3',
@@ -193,7 +193,7 @@ export default {
               role: 'system',
               content: `You are an art therapist helping people transform their pain experiences into creative expression.
               Generate 3 different artistic prompts that could help someone process and express their pain through art.
-              Each prompt should be encouraging, creative, and therapeutic.
+              Each prompt should be encouraging and creative.
               Return the prompts as a JSON array with keys: 'prompt', 'technique', and 'emotional_focus'.`,
             },
             {
@@ -316,7 +316,7 @@ export default {
           The artwork should:
           - Maintain the same artistic technique, medium appearance, and color palette as described
           - Express the pain experience through symbolic elements, textures, and composition
-          - Create a therapeutic transformation that acknowledges the pain while suggesting healing
+          - Create a transformation that acknowledges the pain while suggesting healing
           - Use abstract or figurative elements that represent the physical and emotional sensation
           - Keep the overall aesthetic consistent with the original style analysis
 

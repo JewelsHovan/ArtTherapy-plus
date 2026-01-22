@@ -1,10 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ArtGenerationSettings from '../settings/ArtGenerationSettings';
 
 const ArtSettingsModal = ({ isOpen, onClose, settings, onSettingsChange, isSaving }) => {
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('models');
 
   const handleClose = useCallback(() => {
     onClose();
@@ -79,7 +80,7 @@ const ArtSettingsModal = ({ isOpen, onClose, settings, onSettingsChange, isSavin
         role="dialog"
         aria-modal="true"
         aria-labelledby="art-settings-title"
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>
@@ -102,11 +103,40 @@ const ArtSettingsModal = ({ isOpen, onClose, settings, onSettingsChange, isSavin
           </button>
         </div>
 
-        <div className="px-6 py-5 overflow-y-auto">
+        <div className="px-6 pt-4">
+          <div className="inline-flex rounded-lg bg-gray-100 p-1">
+            <button
+              onClick={() => setActiveTab('models')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'models'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              aria-pressed={activeTab === 'models'}
+            >
+              Models
+            </button>
+            <button
+              onClick={() => setActiveTab('styles')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'styles'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              aria-pressed={activeTab === 'styles'}
+            >
+              Styles
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">
           <ArtGenerationSettings
             settings={settings}
             onSettingsChange={onSettingsChange}
             isSaving={isSaving}
+            showModels={activeTab === 'models'}
+            showStyles={activeTab === 'styles'}
           />
         </div>
 

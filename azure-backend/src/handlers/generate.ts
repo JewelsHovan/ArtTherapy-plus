@@ -59,7 +59,7 @@ export async function handleGenerateImage(
     // Validate model if provided (whitelist approach)
     if (requestedModel && !isValidModel(requestedModel)) {
       res.status(400).json({
-        error: `Invalid model: ${requestedModel}. Valid models are: dall-e-3, flux-pro, gemini-image`,
+        error: `Invalid model: ${requestedModel}. Valid models are: dall-e-3, gpt-5-image, gpt-5-image-mini, flux-pro, flux-2-max, gemini-image, gemini-3-pro-image-preview`,
         code: 'INVALID_MODEL',
       });
       return;
@@ -175,7 +175,7 @@ export async function handleGeneratePrompt(
           role: 'system',
           content: `You are an art therapist helping people transform their pain experiences into creative expression.
           Generate 3 different artistic prompts that could help someone process and express their pain through art.
-          Each prompt should be encouraging, creative, and therapeutic.
+          Each prompt should be encouraging and creative.
           Return the prompts as a JSON array with keys: 'prompt', 'technique', and 'emotional_focus'.`,
         },
         {
@@ -359,7 +359,7 @@ export async function handleEditImage(
     The artwork should:
     - Maintain the same artistic technique, medium appearance, and color palette as described
     - Express the pain experience through symbolic elements, textures, and composition
-    - Create a therapeutic transformation that acknowledges the pain while suggesting healing
+    - Create a transformation that acknowledges the pain while suggesting healing
     - Use abstract or figurative elements that represent the physical and emotional sensation
     - Keep the overall aesthetic consistent with the original style analysis
 
@@ -437,7 +437,7 @@ const VARIATION_ADJUSTMENTS: Record<Exclude<VariationAdjustment, 'custom'>, stri
   warmer: 'Use a warmer color palette with golden, orange, and sunset tones. Make the overall feeling more inviting and comforting.',
   cooler: 'Use a cooler color palette with blue, teal, and silver tones. Make the overall feeling more calm and serene.',
   more_abstract: 'Make the image more abstract and expressionist. Use bolder brushstrokes, less defined shapes, and more emotional color placement.',
-  more_detailed: 'Add more fine details and textures. Make the elements more defined and intricate while maintaining the therapeutic quality.',
+  more_detailed: 'Add more fine details and textures. Make the elements more defined and intricate while maintaining the quality.',
   softer: 'Make the image softer and more gentle. Use lighter colors, smoother transitions, and a more peaceful atmosphere.',
   more_intense: 'Intensify the emotional impact. Use more saturated colors, stronger contrasts, and more dynamic composition.',
 };
@@ -551,7 +551,7 @@ Be detailed but concise. This will be used to recreate a similar image with adju
       ? customPrompt
       : VARIATION_ADJUSTMENTS[adjustment];
 
-    const variationPrompt = `Create a therapeutic art piece based on this analysis:
+    const variationPrompt = `Create an art piece based on this analysis:
 
 ${imageAnalysis}
 
@@ -559,7 +559,7 @@ ${originalDescription ? `Original context: ${originalDescription}` : ''}
 
 IMPORTANT VARIATION: ${adjustmentInstruction}
 
-Maintain the core subject and therapeutic intent while applying the specified adjustment.
+Maintain the core subject and intent while applying the specified adjustment.
 The result should feel like a variation of the original, not a completely different image.`;
 
     // Generate the variation with DALL-E 3

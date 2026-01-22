@@ -170,75 +170,84 @@ const Visualize = () => {
 
   return (
     <div className="min-h-screen watercolor-bg p-4 sm:p-6">
-      <div className="max-w-6xl w-full mx-auto">
+      <div className="max-w-6xl w-full mx-auto mt-6">
         {/* Main Content - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] gap-6 lg:items-stretch">
           {/* Left Panel */}
-          <aside className="space-y-4 order-2 lg:order-1">
-            <VariationPanel
-              onCreateVariation={handleCreateVariation}
-              isLoading={isCreatingVariation}
-              loadingAdjustment={variationAdjustment}
-            />
+          <aside className="order-2 lg:order-1 lg:h-full min-h-0">
+            <div className="flex flex-col gap-4 h-full min-h-0">
+              <div className="flex-1 min-h-0">
+                <VariationPanel
+                  onCreateVariation={handleCreateVariation}
+                  isLoading={isCreatingVariation}
+                  loadingAdjustment={variationAdjustment}
+                  className="h-full min-h-0"
+                />
+              </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-5">
-              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Description</p>
-              <p className="text-gray-700 leading-snug">{generationData.description}</p>
+              <div className="bg-white rounded-2xl shadow-lg p-5">
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Description</p>
+                <p className="text-gray-700 leading-snug">{generationData.description}</p>
 
-              {currentImage.promptUsed && (
-                <div className="relative mt-4 group">
-                  <div
-                    className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 cursor-help"
-                    tabIndex={0}
-                    aria-label="AI interpretation. Focus or hover to preview."
-                  >
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5.001 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <span>AI interpretation</span>
-                    <span className="text-primary/70 normal-case">hover to view</span>
+                {currentImage.promptUsed && (
+                  <div className="relative mt-4 group">
+                    <div
+                      className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 cursor-help"
+                      tabIndex={0}
+                      aria-label="AI interpretation. Focus or hover to preview."
+                    >
+                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5.001 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span>AI interpretation</span>
+                      <span className="text-primary/70 normal-case">hover to view</span>
+                    </div>
+                    <div className="pointer-events-none absolute left-0 z-20 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 italic shadow-lg opacity-0 translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
+                      {currentImage.promptUsed}
+                    </div>
                   </div>
-                  <div className="pointer-events-none absolute left-0 z-20 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 italic shadow-lg opacity-0 translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
-                    {currentImage.promptUsed}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </aside>
 
           {/* Visualization */}
           <div className="order-1 lg:order-2">
-            <div className="bg-white rounded-2xl shadow-lg p-5">
-
-              {/* Image Display - Single or Comparison */}
-              {hasMultipleImages ? (
-                <ImageComparison
-                  images={generationData.images}
-                  selectedIndex={selectedImageIndex}
-                  onSelect={handleImageSelect}
-                  onContinue={handleImageContinue}
-                />
-              ) : (
-                <div className="relative">
-                  <div className="rounded-2xl bg-gradient-to-br from-white to-gray-50 p-3 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.35)] ring-1 ring-black/5">
-                    <img
-                      src={currentImage.url}
-                      alt="Generated artwork"
-                      className="w-full rounded-xl max-h-[60vh] lg:max-h-[calc(100vh-280px)] object-contain"
+            <div className="bg-white rounded-2xl shadow-lg p-5 flex flex-col lg:aspect-square lg:max-w-[calc(100vh-280px)] lg:mx-auto">
+              <div className="flex-1 min-h-0">
+                {/* Image Display - Single or Comparison */}
+                {hasMultipleImages ? (
+                  <div className="lg:h-full overflow-auto pr-1">
+                    <ImageComparison
+                      images={generationData.images}
+                      selectedIndex={selectedImageIndex}
+                      onSelect={handleImageSelect}
+                      onContinue={handleImageContinue}
+                      className="h-full"
                     />
                   </div>
-                  <button
-                    onClick={handleSaveImage}
-                    className="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-lg transition-all"
-                    title="Save Image"
-                    aria-label="Save image to device"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+                ) : (
+                  <div className="relative lg:h-full">
+                    <div className="rounded-2xl bg-gradient-to-br from-white to-gray-50 p-3 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.35)] ring-1 ring-black/5 lg:h-full">
+                      <img
+                        src={currentImage.url}
+                        alt="Generated artwork"
+                        className="w-full rounded-xl max-h-[60vh] lg:max-h-none lg:h-full object-contain"
+                      />
+                    </div>
+                    <button
+                      onClick={handleSaveImage}
+                      className="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 p-2 rounded-full shadow-lg transition-all"
+                      title="Save Image"
+                      aria-label="Save image to device"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

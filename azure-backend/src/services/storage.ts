@@ -196,7 +196,7 @@ export async function storeImageFromUrl(
  * ```
  */
 export async function storeImageFromBase64(
-  base64Data: string,
+  base64Data: unknown,
   key: string,
   metadata: Record<string, string> = {}
 ): Promise<{ success: boolean; key?: string; error?: string }> {
@@ -209,17 +209,41 @@ export async function storeImageFromBase64(
       };
     }
 
+    let base64String: string | null = null;
+
+    if (typeof base64Data === 'string') {
+      base64String = base64Data;
+    } else if (base64Data && typeof base64Data === 'object') {
+      const obj = base64Data as Record<string, unknown>;
+      const candidate = obj.data
+        ?? obj.base64
+        ?? obj.b64_json
+        ?? obj.image
+        ?? obj.url
+        ?? (obj.image_url as { url?: unknown } | undefined)?.url;
+      if (typeof candidate === 'string') {
+        base64String = candidate;
+      }
+    }
+
+    if (!base64String) {
+      return {
+        success: false,
+        error: 'Invalid base64 image data',
+      };
+    }
+
     // Remove data URL prefix if present (e.g., "data:image/png;base64,")
-    const base64Clean = base64Data.replace(/^data:image\/\w+;base64,/, '');
+    const base64Clean = base64String.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Clean, 'base64');
 
     // Detect content type from data URL header or default to PNG
     let contentType = 'image/png';
-    if (base64Data.startsWith('data:image/jpeg') || base64Data.startsWith('/9j/')) {
+    if (base64String.startsWith('data:image/jpeg') || base64String.startsWith('/9j/')) {
       contentType = 'image/jpeg';
-    } else if (base64Data.startsWith('data:image/webp')) {
+    } else if (base64String.startsWith('data:image/webp')) {
       contentType = 'image/webp';
-    } else if (base64Data.startsWith('data:image/gif')) {
+    } else if (base64String.startsWith('data:image/gif')) {
       contentType = 'image/gif';
     }
 

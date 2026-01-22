@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Logo from '../components/common/Logo';
 import OnboardingModal from '../components/modals/OnboardingModal';
 
 const ModeSelection = () => {
@@ -31,13 +30,10 @@ const ModeSelection = () => {
   const firstName = user?.name?.split(' ')[0] || '';
 
   return (
-    <div className="min-h-screen watercolor-bg px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen watercolor-bg px-4 py-8 pt-14 sm:pt-20">
+      <div className="max-w-4xl w-full mx-auto flex flex-col items-center">
         {/* Header with personalized greeting */}
         <div className="text-center mb-12 animate-fadeIn">
-          <div className="mb-6">
-            <Logo />
-          </div>
           <h1 className="text-4xl font-display font-bold text-gray-800 mb-3">
             {firstName ? `Welcome back, ${firstName}` : 'Choose Your Creative Path'}
           </h1>
@@ -47,7 +43,7 @@ const ModeSelection = () => {
         </div>
 
         {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 w-full">
           {/* Create Original Art Card */}
           <button
             onClick={handleCreateOriginal}
@@ -80,7 +76,7 @@ const ModeSelection = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Transform Your Image</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Upload any image and transform it into therapeutic artwork with your story
+              Upload any image and transform it into artwork with your story
             </p>
           </button>
 
@@ -104,7 +100,7 @@ const ModeSelection = () => {
         </div>
 
         {/* Gallery Preview Teaser */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 mb-8 animate-fadeIn" style={{ animationDelay: '400ms' }}>
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 mb-8 animate-fadeIn w-full" style={{ animationDelay: '400ms' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -129,7 +125,7 @@ const ModeSelection = () => {
 
         {/* Journal Teaser */}
         <div
-          className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border-l-4 border-secondary animate-fadeIn"
+          className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border-l-4 border-secondary animate-fadeIn w-full"
           style={{ animationDelay: '500ms' }}
         >
           <div className="flex items-center justify-between">
