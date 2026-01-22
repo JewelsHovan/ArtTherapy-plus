@@ -7,7 +7,6 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 // Pages
 import Welcome from './pages/Welcome';
 import Registration from './pages/Registration';
-import About from './pages/About';
 import ModeSelection from './pages/ModeSelection';
 import PainDescription from './pages/PainDescription';
 import Visualize from './pages/Visualize';
@@ -58,7 +57,6 @@ function App() {
             {/* Public routes */}
             <Route path="/" element={<Welcome />} />
             <Route path="/register" element={<Registration />} />
-            <Route path="/about" element={<About />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>

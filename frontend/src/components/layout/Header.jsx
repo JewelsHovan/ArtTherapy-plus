@@ -54,9 +54,14 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Left Navigation */}
           <nav className="hidden md:flex items-center space-x-2 flex-1">
-            <Link to="/about" className={navLinkClasses('/about')}>
+            <a
+              href="https://www.painplus.ca/about"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-medium transition-colors duration-200 px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-gray-50"
+            >
               About
-            </Link>
+            </a>
             <Link to="/gallery" className={navLinkClasses('/gallery')}>
               Gallery
             </Link>
