@@ -19,7 +19,7 @@
 import { webcrypto, timingSafeEqual as cryptoTimingSafeEqual } from 'crypto';
 
 // Use Node's Web Crypto API
-const crypto = webcrypto as unknown as Crypto;
+const crypto = webcrypto;
 
 /**
  * Constant-time string comparison to prevent timing attacks

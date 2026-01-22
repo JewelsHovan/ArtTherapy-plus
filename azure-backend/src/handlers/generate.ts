@@ -48,8 +48,11 @@ export async function handleGenerateImage(
       n: 1,
     });
 
-    const dalleUrl = response.data[0].url!;
-    const revisedPrompt = response.data[0].revised_prompt || artisticPrompt;
+    const dalleUrl = response.data?.[0]?.url;
+    if (!dalleUrl) {
+      throw new Error('No image URL returned from DALL-E');
+    }
+    const revisedPrompt = response.data?.[0]?.revised_prompt || artisticPrompt;
 
     // Store image in Azure Blob Storage for permanent access (DALL-E URLs expire after ~1 hour)
     let imageUrl = dalleUrl; // Fallback to DALL-E URL if storage fails
@@ -314,8 +317,11 @@ export async function handleEditImage(
       n: 1,
     });
 
-    const dalleUrl = imageResponse.data[0].url!;
-    const revisedPrompt = imageResponse.data[0].revised_prompt || combinedPrompt;
+    const dalleUrl = imageResponse.data?.[0]?.url;
+    if (!dalleUrl) {
+      throw new Error('No image URL returned from DALL-E');
+    }
+    const revisedPrompt = imageResponse.data?.[0]?.revised_prompt || combinedPrompt;
 
     // Store image in Azure Blob Storage for permanent access
     let editedImageUrl = dalleUrl; // Fallback to DALL-E URL if storage fails

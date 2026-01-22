@@ -3,10 +3,7 @@
  *
  * Provides a connection pool wrapper and query helper function.
  * Uses raw SQL queries for compatibility with the ported Cloudflare Worker code.
- *
- * Note: While Drizzle ORM is included in the project, this implementation uses
- * raw SQL queries directly through tedious for simpler migration from D1.
- * The schema.ts file can still be used for Drizzle migrations and type inference.
+ * The schema.ts file provides TypeScript types for type safety.
  */
 
 import { Connection, Request as TediousRequest, TYPES } from 'tedious';
@@ -164,9 +161,9 @@ class TediousPool {
         }
       });
 
-      request.on('row', (columns) => {
+      request.on('row', (columns: Array<{ metadata: { colName: string }; value: unknown }>) => {
         const row: Record<string, unknown> = {};
-        columns.forEach((column) => {
+        columns.forEach((column: { metadata: { colName: string }; value: unknown }) => {
           row[column.metadata.colName] = column.value;
         });
         results.push(row as T);
