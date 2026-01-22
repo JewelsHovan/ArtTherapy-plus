@@ -3,25 +3,26 @@
 Art therapy web app for pain management through AI-powered creative expression.
 
 ## Quick Context
-Full-stack SPA: React 19 frontend (Azure SWA) + Cloudflare Workers API (D1/R2). Uses OpenAI (DALL-E 3, GPT-4o-mini) for image generation and reflection. Microsoft OAuth (PKCE) + email/password auth.
+Full-stack SPA: React 19 frontend (Azure SWA) + Express.js API (Azure Container Apps, SQL Server, Blob Storage). Uses OpenAI (DALL-E 3, GPT-4o-mini) for image generation and reflection. Microsoft OAuth (PKCE) + email/password auth.
 
 ## Tech Stack
 Frontend: React 19, Vite 7, React Router 7, Tailwind CSS 3, Axios
-Backend: Cloudflare Workers, D1 (SQLite), R2 (images), jose (JWT), OpenAI SDK
+Backend: Express.js, Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SDK
 
 ## Commands
 | Task | Command |
 |------|---------|
-| Dev (both) | `./start.sh` |
+| Dev (both) | `./scripts/start-dev.sh` |
 | Frontend | `cd frontend && npm run dev` |
-| Backend | `cd cloudflare-worker && npx wrangler dev` |
+| Backend | `cd azure-backend && npm run dev` |
 | Build | `cd frontend && npm run build` |
 | Lint | `cd frontend && npm run lint` |
-| Deploy API | `cd cloudflare-worker && npm run deploy` |
-| D1 Query | `npx wrangler d1 execute arttherapy-plus-db --remote --command "SQL"` |
+| Build Container | `./scripts/build-container.sh` |
+| Deploy API | `./scripts/deploy-backend.sh` |
+| Deploy Frontend | `./scripts/deploy-frontend.sh` |
 
 ## Ports
-Frontend: 5173 | Backend (wrangler): 8787
+Frontend: 5173 | Backend: 8787
 
 ## Key Patterns
 
@@ -61,13 +62,13 @@ Primary: `#3B82F6` (blue) | Secondary: `#F59E0B` (amber/orange)
 
 ### Frontend (.env)
 ```
-VITE_API_URL=https://arttherapy-plus-api.julienh15.workers.dev/api
+VITE_API_URL=https://arttherapy-plus-api.ambitioussand-bc135123.centralus.azurecontainerapps.io/api
 VITE_MICROSOFT_CLIENT_ID=1068db0a-2e86-4094-aa91-b55bca8ac09a
 ```
 
-### Backend Secrets (wrangler secret put)
+### Backend (.env / Azure secrets)
 ```
-OPENAI_API_KEY, JWT_SECRET, MICROSOFT_CLIENT_SECRET
+DATABASE_URL, AZURE_STORAGE_CONNECTION_STRING, OPENAI_API_KEY, JWT_SECRET, MICROSOFT_CLIENT_SECRET
 ```
 
 ## Critical Files
@@ -77,9 +78,9 @@ OPENAI_API_KEY, JWT_SECRET, MICROSOFT_CLIENT_SECRET
 | `frontend/src/contexts/AuthContext.jsx` | Auth state |
 | `frontend/src/services/api.js` | API client |
 | `frontend/src/pages/Registration.jsx` | OAuth PKCE flow |
-| `cloudflare-worker/src/index.js` | API router |
-| `cloudflare-worker/src/handlers/auth.js` | Auth handlers |
-| `cloudflare-worker/wrangler.toml` | D1/R2 config |
+| `azure-backend/src/index.ts` | Express API server |
+| `azure-backend/src/routes/` | API route handlers |
+| `azure-backend/Dockerfile` | Container configuration |
 
 ## Before Committing
 1. `npm run lint` - No ESLint errors

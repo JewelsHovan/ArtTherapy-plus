@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/azure-static-web-apps-witty-glacier-01b4b7710.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/azure-static-web-apps-witty-glacier-01b4b7710.yml'
 
 jobs:
   build_and_deploy_job:
@@ -19,22 +25,42 @@ jobs:
         with:
           submodules: true
           lfs: false
-      - name: Build And Deploy
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run lint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          VITE_MICROSOFT_CLIENT_ID: "1068db0a-2e86-4094-aa91-b55bca8ac09a"
+          VITE_API_URL: "https://arttherapy-plus-api.ambitioussand-bc135123.centralus.azurecontainerapps.io/api"
+
+      - name: Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WITTY_GLACIER_01B4B7710 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          ###### Repository/Build Configurations ######
           app_location: "./frontend" # App source code path
           api_location: "" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
+          output_location: "dist" # Built app content directory
+          skip_app_build: true # We already built in the previous step
           ###### End of Repository/Build Configurations ######
-        env:
-          VITE_MICROSOFT_CLIENT_ID: "1068db0a-2e86-4094-aa91-b55bca8ac09a"
-          VITE_API_URL: "https://arttherapy-plus-api.julienh15.workers.dev/api"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
