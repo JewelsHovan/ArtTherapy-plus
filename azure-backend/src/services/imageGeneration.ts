@@ -101,7 +101,6 @@ function getGenerationErrorInfo(error: unknown): GenerationErrorInfo {
     };
     const message = typedError.message || typedError.error?.message || '';
     const code = typedError.code || typedError.error?.code;
-    const status = typedError.status || typedError.error?.status;
     const type = typedError.type || typedError.error?.type;
     const lowerMessage = typeof message === 'string' ? message.toLowerCase() : '';
 
