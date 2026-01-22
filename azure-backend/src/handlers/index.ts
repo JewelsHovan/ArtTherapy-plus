@@ -30,6 +30,7 @@ export {
 export {
   handleGetProfile,
   handleUpdateProfile,
+  handleUploadAvatar,
 } from './user.js';
 
 // Generation handlers

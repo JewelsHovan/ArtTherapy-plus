@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArtTherapy+ - Describe Pain Page Concept</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              300: '#C4B5FD',
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#6D28D9',
+            },
+            secondary: {
+              50: '#FDF2F8',
+              100: '#FCE7F3',
+              200: '#FBCFE8',
+              300: '#F9A8D4',
+              400: '#F472B6',
+              500: '#EC4899',
+            },
+            accent: {
+              300: '#FDE68A',
+              400: '#FCD34D',
+              500: '#FBBF24',
+            },
+            cream: {
+              50: '#FEFDFB',
+              100: '#FDF8F3',
+              200: '#FAF5EE',
+            },
+            warm: {
+              gray: '#6B5B5B',
+              text: '#3D3535',
+            }
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            body: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .font-display { font-family: 'Fraunces', serif; }
+
+    .watercolor-bg {
+      background:
+        radial-gradient(ellipse at 10% 90%, rgba(167, 139, 250, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 10%, rgba(244, 114, 182, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(252, 211, 77, 0.06) 0%, transparent 60%),
+        linear-gradient(180deg, #FEFDFB 0%, #FDF8F3 100%);
+    }
+
+    .quick-tag {
+      transition: all 0.2s ease;
+    }
+    .quick-tag:hover {
+      transform: scale(1.05);
+    }
+
+    textarea:focus {
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+    }
+
+    /* Animated gradient border */
+    .gradient-border {
+      position: relative;
+      background: white;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      padding: 2px;
+      background: linear-gradient(135deg, #7C3AED, #F472B6, #FCD34D, #7C3AED);
+      background-size: 300% 300%;
+      animation: gradient-rotate 8s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .gradient-border:focus-within::before {
+      opacity: 1;
+    }
+
+    @keyframes gradient-rotate {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+  </style>
+</head>
+<body class="watercolor-bg min-h-screen">
+
+  <!-- Minimal Nav for focused task -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-cream-50/60 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <a href="home-concept-v1.html" class="flex items-center gap-2 text-warm-gray hover:text-primary-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span class="font-medium">Back</span>
+        </a>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-400 rounded-2xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="pt-24 pb-16 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 rounded-full text-primary-600 text-sm font-medium mb-6">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create New Artwork
+        </div>
+        <h1 class="font-display text-4xl md:text-5xl font-medium text-warm-text mb-4">
+          Describe Your Experience
+        </h1>
+        <p class="text-lg text-warm-gray max-w-xl mx-auto">
+          Share how you're feeling in your own words. There's no right or wrong way to express pain.
+        </p>
+      </div>
+
+      <!-- Main Input Card -->
+      <div class="gradient-border bg-white rounded-3xl p-8 md:p-10 shadow-sm mb-8">
+
+        <!-- Textarea -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-warm-text mb-3">
+            What does your pain feel like today?
+          </label>
+          <textarea
+            rows="5"
+            placeholder="e.g., A tight knot in my lower back that pulses with every breath, like a fist squeezing my spine..."
+            class="w-full px-5 py-4 text-lg bg-cream-50 border-2 border-cream-200 rounded-2xl resize-none focus:outline-none focus:border-primary-300 focus:bg-white transition-all placeholder:text-warm-gray/40"
+          ></textarea>
+          <div class="flex justify-between items-center mt-2">
+            <span class="text-sm text-warm-gray/60">Be as descriptive as you'd like</span>
+            <span class="text-sm text-warm-gray/60">0 / 500</span>
+          </div>
+        </div>
+
+        <!-- Quick Tags -->
+        <div class="mb-8">
+          <p class="text-sm text-warm-gray mb-3">Quick descriptors:</p>
+          <div class="flex flex-wrap gap-2">
+            <button class="quick-tag px-4 py-2 bg-primary-50 text-primary-600 rounded-full text-sm font-medium hover:bg-primary-100">
+              Sharp
+            </button>
+            <button class="quick-tag px-4 py-2 bg-secondary-50 text-secondary-500 rounded-full text-sm font-medium hover:bg-secondary-100">
+              Throbbing
+            </button>
+            <button class="quick-tag px-4 py-2 bg-accent-300/30 text-accent-500 rounded-full text-sm font-medium hover:bg-accent-300/50">
+              Burning
+            </button>
+            <button class="quick-tag px-4 py-2 bg-primary-50 text-primary-600 rounded-full text-sm font-medium hover:bg-primary-100">
+              Dull ache
+            </button>
+            <button class="quick-tag px-4 py-2 bg-secondary-50 text-secondary-500 rounded-full text-sm font-medium hover:bg-secondary-100">
+              Stabbing
+            </button>
+            <button class="quick-tag px-4 py-2 bg-cream-200 text-warm-gray rounded-full text-sm font-medium hover:bg-cream-300">
+              Radiating
+            </button>
+            <button class="quick-tag px-4 py-2 bg-cream-200 text-warm-gray rounded-full text-sm font-medium hover:bg-cream-300">
+              Pressure
+            </button>
+            <button class="quick-tag px-4 py-2 bg-cream-200 text-warm-gray rounded-full text-sm font-medium hover:bg-cream-300">
+              Tingling
+            </button>
+          </div>
+        </div>
+
+        <!-- Model & Style Selection (Preview of ticket 002 feature) -->
+        <div class="grid md:grid-cols-2 gap-4 mb-8 p-4 bg-cream-50 rounded-2xl">
+          <div>
+            <label class="block text-sm font-medium text-warm-text mb-2">Art Style</label>
+            <select class="w-full px-4 py-3 bg-white border border-cream-200 rounded-xl focus:outline-none focus:border-primary-300 text-warm-text">
+              <option>Abstract Expressionist</option>
+              <option>Watercolor Dreams</option>
+              <option>Oil Painting</option>
+              <option>Digital Surrealism</option>
+              <option>Soft Impressionist</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-warm-text mb-2">AI Model</label>
+            <select class="w-full px-4 py-3 bg-white border border-cream-200 rounded-xl focus:outline-none focus:border-primary-300 text-warm-text">
+              <option>DALL-E 3 (Recommended)</option>
+              <option>Stable Diffusion XL</option>
+              <option>Flux</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button class="w-full py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-2xl font-semibold text-lg hover:from-primary-700 hover:to-primary-600 transition-all shadow-lg shadow-primary-500/25 flex items-center justify-center gap-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Generate Artwork
+        </button>
+      </div>
+
+      <!-- Helper Text -->
+      <div class="text-center">
+        <p class="text-sm text-warm-gray/60">
+          Your words become the brushstrokes of AI-generated art, transforming pain into something beautiful.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>

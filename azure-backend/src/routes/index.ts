@@ -10,6 +10,7 @@ import galleryRoutes from './gallery.routes.js';
 import journalRoutes from './journal.routes.js';
 import userRoutes from './user.routes.js';
 import generateRoutes, { reflectRouter, inspireRouter, editRouter } from './generate.routes.js';
+import settingsRoutes from './settings.routes.js';
 
 const router = Router();
 
@@ -35,5 +36,6 @@ router.use('/generate', generateRoutes);
 router.use('/reflect', reflectRouter);
 router.use('/inspire', inspireRouter);
 router.use('/edit', editRouter);
+router.use('/settings', settingsRoutes);
 
 export default router;

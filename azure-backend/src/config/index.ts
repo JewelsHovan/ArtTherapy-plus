@@ -37,6 +37,11 @@ export interface Config {
   microsoft: {
     clientId: string;
   };
+  /** OpenRouter configuration (optional - enables multi-model image generation) */
+  openrouter?: {
+    apiKey: string;
+    baseUrl: string;
+  };
 }
 
 /**
@@ -91,6 +96,13 @@ function loadConfig(): Config {
     microsoft: {
       clientId: process.env.MICROSOFT_CLIENT_ID || '1068db0a-2e86-4094-aa91-b55bca8ac09a',
     },
+    // OpenRouter is optional - only configured if API key is present
+    openrouter: process.env.OPENROUTER_API_KEY
+      ? {
+          apiKey: process.env.OPENROUTER_API_KEY,
+          baseUrl: 'https://openrouter.ai/api/v1',
+        }
+      : undefined,
   };
 }
 

@@ -173,7 +173,19 @@ export const painPlusAPI = {
     getProfile: () =>
       api.get('/user/profile'),
     updateProfile: (data) =>
-      api.put('/user/profile', data)
+      api.put('/user/profile', data),
+    uploadAvatar: (imageData) =>
+      api.post('/user/avatar', { image: imageData }),
+  },
+
+  // Settings
+  settings: {
+    /**
+     * Get available image models and style presets
+     * @returns {Promise} - { models: ModelInfo[], styles: StylePresetInfo[], defaultModel, defaultStyle }
+     */
+    getImageModels: () =>
+      api.get('/settings/image-models')
   },
 
   // Gallery (Phase 2 - will update these)
@@ -201,9 +213,20 @@ export const painPlusAPI = {
     return response.data;
   },
 
-  // Generate image from pain description
-  generateImage: async (description) => {
-    const response = await api.post('/generate/image', { description });
+  /**
+   * Generate image from pain description with optional model and style
+   * @param {string} description - Pain description to visualize
+   * @param {Object} options - Optional generation settings
+   * @param {string} options.model - Model ID (dall-e-3, flux-pro, gemini-image)
+   * @param {string} options.style - Style preset ID
+   * @returns {Promise} - { success, image_url, prompt_used, model_used, style_used }
+   */
+  generateImage: async (description, options = {}) => {
+    const response = await api.post('/generate/image', {
+      description,
+      model: options.model,
+      style: options.style,
+    });
     return response.data;
   },
 

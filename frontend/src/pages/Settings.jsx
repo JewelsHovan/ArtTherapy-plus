@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { painPlusAPI } from '../services/api';
+import ArtGenerationSettings from '../components/settings/ArtGenerationSettings';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Settings = () => {
 
   const categories = [
     { id: 'general', label: 'General', icon: '⚙️' },
+    { id: 'art-generation', label: 'Art Generation', icon: '🎨' },
     { id: 'accessibility', label: 'Accessibility', icon: '♿' },
     { id: 'language', label: 'Language', icon: '🌐' },
     { id: 'privacy', label: 'Privacy Settings', icon: '🔒' },
@@ -67,6 +69,7 @@ const Settings = () => {
       { label: 'Speech-to-Text', description: 'Use voice input for text fields' },
       { label: 'Link to Bluetooth-enabled devices', description: 'Connect external devices' }
     ],
+    'art-generation': [], // Handled by dedicated component
     accessibility: [
       { label: 'High Contrast Mode', description: 'Increase contrast for better visibility' },
       { label: 'Large Text', description: 'Use larger font sizes' },
@@ -195,7 +198,14 @@ const Settings = () => {
 
         {/* Settings Options */}
         <div className="space-y-6">
-          {filteredOptions.length === 0 ? (
+          {/* Art Generation Settings - Custom Component */}
+          {selectedCategory === 'art-generation' ? (
+            <ArtGenerationSettings
+              settings={settings}
+              onSettingsChange={updateSetting}
+              isSaving={isSaving}
+            />
+          ) : filteredOptions.length === 0 ? (
             <div className="bg-white p-8 rounded-lg border border-gray-200 text-center text-gray-500">
               <p>No matching settings found for "{searchQuery}"</p>
               <button

@@ -2,7 +2,7 @@
  * AI Generation handlers
  *
  * Handles image generation, prompts, reflections, and inspiration using OpenAI.
- * Ported from Cloudflare Worker implementation.
+ * Supports multi-model image generation via the imageGeneration service.
  */
 
 import { Response } from 'express';
@@ -10,12 +10,16 @@ import { AuthenticatedRequest } from '../middleware/auth.js';
 import { getOpenAIClient } from '../services/openai.js';
 import { generateImageKey, storeImageFromUrl, getPublicUrl } from '../services/storage.js';
 import { config } from '../config/index.js';
+import { generateImage } from '../services/imageGeneration.js';
+import { isValidModel, isValidStyle, ImageModel, StylePreset } from '../utils/stylePresets.js';
 
 /**
  * Generate an image from a pain description
  *
  * POST /api/generate/image
- * Body: { description: string }
+ * Body: { description: string, model?: ImageModel, style?: StylePreset }
+ *
+ * Supports multiple models (dall-e-3, flux-pro, gemini-image) and style presets.
  */
 export async function handleGenerateImage(
   req: AuthenticatedRequest,
@@ -24,7 +28,10 @@ export async function handleGenerateImage(
   try {
     const user = req.user!;
     const painDescription = req.body.description || '';
+    const requestedModel = req.body.model as string | undefined;
+    const requestedStyle = req.body.style as string | undefined;
 
+    // Validate required fields
     if (!painDescription) {
       res.status(400).json({
         error: 'Description is required',
@@ -33,51 +40,47 @@ export async function handleGenerateImage(
       return;
     }
 
-    const openai = getOpenAIClient();
+    // Validate model if provided (whitelist approach)
+    if (requestedModel && !isValidModel(requestedModel)) {
+      res.status(400).json({
+        error: `Invalid model: ${requestedModel}. Valid models are: dall-e-3, flux-pro, gemini-image`,
+        code: 'INVALID_MODEL',
+      });
+      return;
+    }
 
-    const artisticPrompt = `Create an abstract artistic representation of: ${painDescription}.
-    Style: Abstract expressionist art therapy piece with vibrant colors that transform pain into beauty.
-    Use flowing organic shapes, bold brushstrokes, and symbolic elements that represent healing and transformation.
-    The artwork should be uplifting and therapeutic while acknowledging the pain experience.`;
+    // Validate style if provided (whitelist approach)
+    if (requestedStyle && !isValidStyle(requestedStyle)) {
+      res.status(400).json({
+        error: `Invalid style: ${requestedStyle}. Valid styles are: default, photorealism, oil-painting, watercolor, cartoon, anime, abstract-expressionist, minimalist`,
+        code: 'INVALID_STYLE',
+      });
+      return;
+    }
 
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: artisticPrompt,
-      size: '1024x1024',
-      quality: 'standard',
-      n: 1,
+    // Generate image using the multi-model service
+    const result = await generateImage({
+      description: painDescription,
+      model: requestedModel as ImageModel | undefined,
+      style: requestedStyle as StylePreset | undefined,
+      userId: user.id,
     });
 
-    const dalleUrl = response.data?.[0]?.url;
-    if (!dalleUrl) {
-      throw new Error('No image URL returned from DALL-E');
-    }
-    const revisedPrompt = response.data?.[0]?.revised_prompt || artisticPrompt;
-
-    // Store image in Azure Blob Storage for permanent access (DALL-E URLs expire after ~1 hour)
-    let imageUrl = dalleUrl; // Fallback to DALL-E URL if storage fails
-
-    if (config.storage.connectionString && config.storage.publicUrl) {
-      const userId = user.id;
-      const imageKey = generateImageKey(userId, 'generated');
-      const storeResult = await storeImageFromUrl(dalleUrl, imageKey, {
-        userId: userId,
-        description: painDescription,
-        prompt: revisedPrompt,
+    if (!result.success) {
+      res.status(500).json({
+        error: result.error || 'Failed to generate image',
+        code: 'GENERATION_FAILED',
       });
-
-      if (storeResult.success) {
-        imageUrl = getPublicUrl(imageKey);
-      } else {
-        console.warn('Azure Blob Storage failed, using DALL-E URL:', storeResult.error);
-      }
+      return;
     }
 
     res.status(200).json({
       success: true,
-      image_url: imageUrl,
-      prompt_used: revisedPrompt,
+      image_url: result.imageUrl,
+      prompt_used: result.promptUsed,
       original_description: painDescription,
+      model_used: result.modelUsed,
+      style_used: result.styleUsed,
     });
   } catch (error) {
     console.error('Generate image error:', error);

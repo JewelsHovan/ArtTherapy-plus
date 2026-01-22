@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'express';
-import { handleGetProfile, handleUpdateProfile } from '../handlers/user.js';
+import { handleGetProfile, handleUpdateProfile, handleUploadAvatar } from '../handlers/user.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
@@ -26,5 +26,12 @@ router.get('/profile', handleGetProfile);
  * Body: { name?: string, age?: number, ... }
  */
 router.put('/profile', handleUpdateProfile);
+
+/**
+ * Upload user avatar
+ * POST /api/user/avatar
+ * Body: { image: string } (base64 data URL)
+ */
+router.post('/avatar', handleUploadAvatar);
 
 export default router;

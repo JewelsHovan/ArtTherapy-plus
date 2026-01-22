@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArtTherapy+ Design Concept v1 - Warm Therapeutic</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Option A: Warm Therapeutic
+            primary: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              300: '#C4B5FD',
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#7C3AED', // Main primary
+              700: '#6D28D9',
+              800: '#5B21B6',
+              900: '#4C1D95',
+            },
+            secondary: {
+              50: '#FDF2F8',
+              100: '#FCE7F3',
+              200: '#FBCFE8',
+              300: '#F9A8D4',
+              400: '#F472B6', // Main secondary
+              500: '#EC4899',
+              600: '#DB2777',
+            },
+            accent: {
+              300: '#FDE68A',
+              400: '#FCD34D', // Main accent
+              500: '#FBBF24',
+            },
+            cream: {
+              50: '#FEFDFB',
+              100: '#FDF8F3',
+              200: '#FAF5EE',
+              300: '#F5EDE4',
+            },
+            warm: {
+              gray: '#6B5B5B',
+              text: '#3D3535',
+            }
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            body: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+    }
+    .font-display {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* Watercolor texture overlay */
+    .watercolor-bg {
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(244, 114, 182, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 30%, rgba(252, 211, 77, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #FEFDFB 0%, #FDF8F3 100%);
+    }
+
+    /* Subtle animation */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    /* Card hover effect */
+    .feature-card {
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -12px rgba(124, 58, 237, 0.15);
+    }
+
+    /* Organic blob shapes */
+    .blob {
+      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    }
+  </style>
+</head>
+<body class="watercolor-bg min-h-screen">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-cream-50/80 backdrop-blur-md border-b border-primary-100/50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-400 rounded-2xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <span class="font-display text-xl font-medium text-warm-text">pain<span class="text-primary-600">+</span></span>
+        </div>
+
+        <!-- Nav Links -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#" class="text-warm-gray hover:text-primary-600 transition-colors font-medium">Gallery</a>
+          <a href="#" class="text-warm-gray hover:text-primary-600 transition-colors font-medium">Journal</a>
+          <a href="#" class="text-warm-gray hover:text-primary-600 transition-colors font-medium">Insights</a>
+        </div>
+
+        <!-- User -->
+        <div class="flex items-center gap-4">
+          <button class="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/25">
+            Create Art
+          </button>
+          <div class="w-10 h-10 bg-gradient-to-br from-secondary-300 to-secondary-400 rounded-full flex items-center justify-center text-white font-semibold">
+            H
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero / Home Section -->
+  <main class="pt-24 pb-16">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <!-- Welcome Section -->
+      <div class="text-center mb-16 pt-8">
+        <h1 class="font-display text-4xl md:text-5xl font-medium text-warm-text mb-4">
+          Welcome back, <span class="text-primary-600">Hannah</span>
+        </h1>
+        <p class="text-lg text-warm-gray max-w-xl mx-auto">
+          Your creative sanctuary awaits. How would you like to express yourself today?
+        </p>
+      </div>
+
+      <!-- Main Feature Cards Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+
+        <!-- Create Art Card -->
+        <div class="feature-card bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-primary-100/50 cursor-pointer group">
+          <div class="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 class="font-display text-2xl font-medium text-warm-text mb-2">Create New Art</h3>
+          <p class="text-warm-gray mb-4">Describe your experience and let AI transform it into therapeutic artwork.</p>
+          <span class="text-primary-600 font-medium flex items-center gap-2 group-hover:gap-3 transition-all">
+            Start creating
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+
+        <!-- Transform Image Card -->
+        <div class="feature-card bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-secondary-100/50 cursor-pointer group">
+          <div class="w-16 h-16 bg-gradient-to-br from-secondary-300 to-secondary-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-2xl font-medium text-warm-text mb-2">Transform Image</h3>
+          <p class="text-warm-gray mb-4">Upload your own image and reimagine it through your pain experience.</p>
+          <span class="text-secondary-500 font-medium flex items-center gap-2 group-hover:gap-3 transition-all">
+            Upload & transform
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+
+        <!-- Get Inspired Card -->
+        <div class="feature-card bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-accent-300/50 cursor-pointer group">
+          <div class="w-16 h-16 bg-gradient-to-br from-accent-300 to-accent-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-2xl font-medium text-warm-text mb-2">Get Inspired</h3>
+          <p class="text-warm-gray mb-4">Browse creative prompts and ideas to spark your artistic expression.</p>
+          <span class="text-accent-500 font-medium flex items-center gap-2 group-hover:gap-3 transition-all">
+            Find inspiration
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Secondary Actions Row -->
+      <div class="grid md:grid-cols-2 gap-6 mb-16">
+
+        <!-- Gallery Preview -->
+        <div class="feature-card bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-8 border border-primary-100/30 cursor-pointer">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-display text-xl font-medium text-warm-text">Your Gallery</h3>
+            <span class="text-sm text-primary-600 font-medium">View all →</span>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-20 h-20 bg-gradient-to-br from-primary-200 to-secondary-200 rounded-xl"></div>
+            <div class="w-20 h-20 bg-gradient-to-br from-secondary-200 to-accent-200 rounded-xl"></div>
+            <div class="w-20 h-20 bg-gradient-to-br from-accent-200 to-primary-200 rounded-xl"></div>
+            <div class="w-20 h-20 bg-primary-100 rounded-xl flex items-center justify-center text-primary-400 text-2xl">+12</div>
+          </div>
+        </div>
+
+        <!-- Journal / Reflection -->
+        <div class="feature-card bg-gradient-to-br from-cream-100 to-cream-200 rounded-3xl p-8 border border-primary-100/30 cursor-pointer">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-display text-xl font-medium text-warm-text">Recent Reflections</h3>
+            <span class="text-sm text-primary-600 font-medium">Journal →</span>
+          </div>
+          <div class="space-y-3">
+            <div class="bg-white/60 rounded-xl p-4">
+              <p class="text-sm text-warm-gray line-clamp-2">"Today's artwork helped me visualize the tension in my shoulders as melting ice..."</p>
+              <span class="text-xs text-warm-gray/60 mt-2 block">2 days ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insights Teaser -->
+      <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
+        <!-- Decorative blobs -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-secondary-400/20 blob float-animation"></div>
+        <div class="absolute bottom-0 left-1/4 w-48 h-48 bg-accent-400/20 blob float-animation" style="animation-delay: -3s;"></div>
+
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-medium mb-4">Coming Soon</span>
+          <h3 class="font-display text-3xl font-medium mb-4">Your Pain Insights</h3>
+          <p class="text-primary-100 mb-6">Track patterns, understand triggers, and see your healing journey visualized over time. AI-powered analytics to support your therapy.</p>
+          <button class="px-6 py-3 bg-white text-primary-600 rounded-xl font-medium hover:bg-primary-50 transition-colors">
+            Learn More
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Color Palette Reference (for design review) -->
+  <div class="fixed bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-primary-100/50">
+    <p class="text-xs text-warm-gray mb-2 font-medium">Color Palette</p>
+    <div class="flex gap-2">
+      <div class="w-8 h-8 rounded-lg bg-primary-600" title="Primary #7C3AED"></div>
+      <div class="w-8 h-8 rounded-lg bg-secondary-400" title="Secondary #F472B6"></div>
+      <div class="w-8 h-8 rounded-lg bg-accent-400" title="Accent #FCD34D"></div>
+      <div class="w-8 h-8 rounded-lg bg-cream-100 border" title="Cream #FDF8F3"></div>
+    </div>
+  </div>
+
+</body>
+</html>

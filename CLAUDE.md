@@ -2,12 +2,18 @@
 
 Art therapy web app for pain management through AI-powered creative expression.
 
+## Agent System
+Global agents: ~/.claude/CLAUDE.md
+Orchestrator-first routing
+
+---
+
 ## Quick Context
-Full-stack SPA: React 19 frontend (Azure SWA) + Express.js API (Azure Container Apps, SQL Server, Blob Storage). Uses OpenAI (DALL-E 3, GPT-4o-mini) for image generation and reflection. Microsoft OAuth (PKCE) + email/password auth.
+React 19 SPA (Azure SWA) + Express.js/TypeScript API (Azure Container Apps). Azure SQL Server, Blob Storage, OpenAI (DALL-E 3, GPT-4o-mini). Microsoft OAuth (PKCE) + email/password auth.
 
 ## Tech Stack
-Frontend: React 19, Vite 7, React Router 7, Tailwind CSS 3, Axios
-Backend: Express.js, Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SDK
+Frontend: React 19, Vite 7, React Router 7, Tailwind CSS 3, Axios, react-hot-toast
+Backend: Express.js, TypeScript, Drizzle ORM, Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SDK
 
 ## Commands
 | Task | Command |
@@ -15,11 +21,11 @@ Backend: Express.js, Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SD
 | Dev (both) | `./scripts/start-dev.sh` |
 | Frontend | `cd frontend && npm run dev` |
 | Backend | `cd azure-backend && npm run dev` |
-| Build | `cd frontend && npm run build` |
+| Build FE | `cd frontend && npm run build` |
 | Lint | `cd frontend && npm run lint` |
 | Build Container | `./scripts/build-container.sh` |
 | Deploy API | `./scripts/deploy-backend.sh` |
-| Deploy Frontend | `./scripts/deploy-frontend.sh` |
+| Deploy FE | `./scripts/deploy-frontend.sh` |
 
 ## Ports
 Frontend: 5173 | Backend: 8787
@@ -27,66 +33,62 @@ Frontend: 5173 | Backend: 8787
 ## Key Patterns
 
 ### Authentication
-- Microsoft OAuth uses PKCE (frontend token exchange at `/oauth-callback.html`)
-- JWT tokens stored in localStorage (`auth_token`), 7-day expiry
-- AuthContext provides: `user`, `token`, `isAuthenticated`, `isLoading`, `login`, `logout`
+- Microsoft OAuth PKCE (frontend token exchange at `/oauth-callback.html`)
+- JWT tokens in localStorage (`auth_token`), 7-day expiry
+- AuthContext: `user`, `token`, `isAuthenticated`, `isLoading`, `login`, `logout`
 
 ### API Calls
-- All calls via `painPlusAPI` object in `frontend/src/services/api.js`
+- All calls via `painPlusAPI` in `frontend/src/services/api.js`
 - Bearer token auto-attached by axios interceptor
-- 401 responses trigger redirect to `/register`
+- 401 responses redirect to `/register`
 
 ### Protected Routes
 Wrap with `<ProtectedRoute />` in App.jsx, renders inside `<AppLayout />`
 
 ### Component Structure
-- `components/common/` - Button, Logo, Skeleton, ErrorBoundary
+- `components/common/` - Button, Logo, Skeleton, ErrorBoundary, LoadingButton, ConfirmDialog, EmptyState, ErrorMessage, PageHeader
 - `components/forms/` - TextInput, PasswordInput
 - `components/layout/` - AppLayout, Header
+- `components/modals/` - ImageModal, OnboardingModal
 - `pages/` - Route components
 
 ## Theme Colors
-Primary: `#3B82F6` (blue) | Secondary: `#F59E0B` (amber/orange)
+Primary: `#3B82F6` (blue) | Secondary: `#F59E0B` (amber)
 
-## API Endpoints (Protected)
-| Endpoint | Purpose |
-|----------|---------|
-| POST /api/generate/image | DALL-E 3 art from pain description |
-| POST /api/edit/image | Vision analysis + style transfer |
-| POST /api/reflect | GPT reflection questions |
-| GET/POST /api/gallery | User artwork storage |
-| GET/POST /api/journal | Reflection entries |
-| GET/PUT /api/user/profile | Profile management |
+## Routes
+| Route | Component | Auth |
+|-------|-----------|------|
+| `/` | Welcome | Public |
+| `/register` | Registration | Public |
+| `/mode` | ModeSelection | Protected |
+| `/describe` | PainDescription | Protected |
+| `/visualize` | Visualize | Protected |
+| `/edit` | Edit | Protected |
+| `/gallery` | Gallery | Protected |
+| `/inspire` | Inspire | Protected |
+| `/reflect` | Reflect | Protected |
+| `/journal` | Journal | Protected |
+| `/profile` | Profile | Protected |
+| `/settings` | Settings | Protected |
 
 ## Environment Variables
-
-### Frontend (.env)
-```
-VITE_API_URL=https://arttherapy-plus-api.ambitioussand-bc135123.centralus.azurecontainerapps.io/api
-VITE_MICROSOFT_CLIENT_ID=1068db0a-2e86-4094-aa91-b55bca8ac09a
-```
-
-### Backend (.env / Azure secrets)
-```
-DATABASE_URL, AZURE_STORAGE_CONNECTION_STRING, OPENAI_API_KEY, JWT_SECRET, MICROSOFT_CLIENT_SECRET
-```
+Frontend: `VITE_API_URL`, `VITE_MICROSOFT_CLIENT_ID`
+Backend: `DATABASE_URL`, `AZURE_STORAGE_CONNECTION_STRING`, `OPENAI_API_KEY`, `JWT_SECRET`, `MICROSOFT_CLIENT_SECRET`
 
 ## Critical Files
 | File | Purpose |
 |------|---------|
-| `frontend/src/App.jsx` | Routes, AuthProvider |
+| `frontend/src/App.jsx` | Routes, AuthProvider, Toaster |
 | `frontend/src/contexts/AuthContext.jsx` | Auth state |
 | `frontend/src/services/api.js` | API client |
-| `frontend/src/pages/Registration.jsx` | OAuth PKCE flow |
-| `azure-backend/src/index.ts` | Express API server |
+| `azure-backend/src/index.ts` | Express server |
 | `azure-backend/src/routes/` | API route handlers |
-| `azure-backend/Dockerfile` | Container configuration |
+| `azure-backend/Dockerfile` | Container config |
 
 ## Before Committing
 1. `npm run lint` - No ESLint errors
 2. `npm run build` - Build succeeds
 3. Test auth flow (login/logout)
-4. Check CORS if adding new origins
 
 ## Documentation
 Index: `docs/KNOWLEDGE_BASE.md`

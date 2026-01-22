@@ -8,6 +8,13 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { query } from '../db/index.js';
+import {
+  generateImageKey,
+  storeImageFromBuffer,
+  getPublicUrl,
+  deleteImage,
+} from '../services/storage.js';
+import { config } from '../config/index.js';
 
 /**
  * Whitelist of allowed profile fields for updates
@@ -173,6 +180,142 @@ export async function handleUpdateProfile(
     console.error('Update profile error:', error);
     res.status(500).json({
       error: 'Failed to update profile',
+      code: 'INTERNAL_ERROR',
+    });
+  }
+}
+
+/**
+ * Allowed MIME types for avatar uploads
+ */
+const ALLOWED_AVATAR_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
+/**
+ * Map MIME types to file extensions
+ */
+const MIME_TO_EXTENSION: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+};
+
+/**
+ * Upload user avatar
+ *
+ * POST /api/user/avatar
+ * Body: { image: string } (base64 data URL)
+ */
+export async function handleUploadAvatar(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const user = req.user!;
+    const { image } = req.body;
+
+    if (!image || typeof image !== 'string') {
+      res.status(400).json({
+        error: 'Image data is required',
+        code: 'VALIDATION_ERROR',
+      });
+      return;
+    }
+
+    // Validate data URL format: data:image/TYPE;base64,DATA
+    const dataUrlMatch = image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    if (!dataUrlMatch) {
+      res.status(400).json({
+        error: 'Invalid image format. Please provide a valid base64 data URL.',
+        code: 'VALIDATION_ERROR',
+      });
+      return;
+    }
+
+    const [, mimeType, base64Data] = dataUrlMatch;
+
+    // Validate MIME type against whitelist
+    if (!ALLOWED_AVATAR_MIME_TYPES.includes(mimeType)) {
+      res.status(400).json({
+        error: `Unsupported image type. Allowed types: ${ALLOWED_AVATAR_MIME_TYPES.join(', ')}`,
+        code: 'VALIDATION_ERROR',
+      });
+      return;
+    }
+
+    // Convert base64 to Buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Validate buffer size (max 5MB)
+    const maxSizeBytes = 5 * 1024 * 1024;
+    if (buffer.length > maxSizeBytes) {
+      res.status(400).json({
+        error: 'Image too large. Maximum size is 5MB.',
+        code: 'VALIDATION_ERROR',
+      });
+      return;
+    }
+
+    // Get file extension from MIME type
+    const extension = MIME_TO_EXTENSION[mimeType] || 'png';
+
+    // Generate storage key with correct extension
+    const baseKey = generateImageKey(user.id, 'avatars');
+    const key = baseKey.replace(/\.png$/, `.${extension}`);
+
+    // Store the image in Azure Blob Storage
+    const storeResult = await storeImageFromBuffer(buffer, key, mimeType, {
+      userId: user.id,
+      purpose: 'avatar',
+    });
+
+    if (!storeResult.success) {
+      console.error('Avatar storage failed:', storeResult.error);
+      res.status(500).json({
+        error: 'Failed to store avatar image',
+        code: 'STORAGE_ERROR',
+      });
+      return;
+    }
+
+    // Get public URL for the new avatar
+    const publicUrl = getPublicUrl(key);
+
+    // Get the user's current avatar URL to delete the old one
+    const currentResults = await query<Record<string, unknown>>(
+      'SELECT avatar_url FROM users WHERE id = @p0',
+      [user.id]
+    );
+
+    const currentAvatarUrl = currentResults[0]?.avatar_url as string | null;
+
+    // Delete old avatar if it exists and is from our storage
+    if (currentAvatarUrl && config.storage.publicUrl) {
+      const storageBaseUrl = config.storage.publicUrl.replace(/\/$/, '');
+      if (currentAvatarUrl.startsWith(storageBaseUrl)) {
+        try {
+          // Extract key from URL
+          const oldKey = currentAvatarUrl.replace(`${storageBaseUrl}/`, '');
+          await deleteImage(oldKey);
+        } catch (deleteError) {
+          // Log but don't fail the request - old avatar cleanup is best effort
+          console.warn('Failed to delete old avatar:', deleteError);
+        }
+      }
+    }
+
+    // Update user's avatar_url in database
+    await query(
+      'UPDATE users SET avatar_url = @p0, updated_at = GETDATE() WHERE id = @p1',
+      [publicUrl, user.id]
+    );
+
+    res.status(200).json({
+      avatar_url: publicUrl,
+    });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({
+      error: 'Failed to upload avatar',
       code: 'INTERNAL_ERROR',
     });
   }

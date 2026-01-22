@@ -140,6 +140,144 @@ export async function storeImageFromUrl(
 }
 
 /**
+ * Store image from base64-encoded data
+ *
+ * OpenRouter models return images as base64. This function handles
+ * both raw base64 and data URL formats.
+ *
+ * @param base64Data - Base64 encoded image data (with or without data URL prefix)
+ * @param key - Storage key from generateImageKey()
+ * @param metadata - Optional metadata to store with the image
+ * @returns Result object with success status and key or error
+ *
+ * @example
+ * ```typescript
+ * const result = await storeImageFromBase64(base64Data, key, { userId: 'user-123' });
+ * if (result.success) {
+ *   console.log('Stored at:', result.key);
+ * }
+ * ```
+ */
+export async function storeImageFromBase64(
+  base64Data: string,
+  key: string,
+  metadata: Record<string, string> = {}
+): Promise<{ success: boolean; key?: string; error?: string }> {
+  try {
+    const container = getContainerClient();
+    if (!container) {
+      return {
+        success: false,
+        error: 'Azure Blob Storage not configured',
+      };
+    }
+
+    // Remove data URL prefix if present (e.g., "data:image/png;base64,")
+    const base64Clean = base64Data.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Clean, 'base64');
+
+    // Detect content type from data URL header or default to PNG
+    let contentType = 'image/png';
+    if (base64Data.startsWith('data:image/jpeg') || base64Data.startsWith('/9j/')) {
+      contentType = 'image/jpeg';
+    } else if (base64Data.startsWith('data:image/webp')) {
+      contentType = 'image/webp';
+    } else if (base64Data.startsWith('data:image/gif')) {
+      contentType = 'image/gif';
+    }
+
+    // Get blob client for the key
+    const blobClient = container.getBlockBlobClient(key);
+
+    // Upload to Azure Blob Storage with metadata
+    await blobClient.uploadData(buffer, {
+      blobHTTPHeaders: {
+        blobContentType: contentType,
+        blobCacheControl: 'public, max-age=31536000', // Cache for 1 year
+      },
+      metadata: {
+        ...metadata,
+        storedAt: new Date().toISOString(),
+      },
+    });
+
+    return {
+      success: true,
+      key: key,
+    };
+  } catch (error) {
+    console.error('Azure Blob Storage base64 upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to store image from base64',
+    };
+  }
+}
+
+/**
+ * Store image from a Buffer directly
+ *
+ * Used for avatar uploads and other direct binary uploads.
+ *
+ * @param buffer - Image data as Buffer
+ * @param key - Storage key from generateImageKey()
+ * @param contentType - MIME type of the image (default: 'image/png')
+ * @param metadata - Optional metadata to store with the image
+ * @returns Result object with success status and key or error
+ *
+ * @example
+ * ```typescript
+ * const buffer = Buffer.from(base64Data, 'base64');
+ * const result = await storeImageFromBuffer(buffer, key, 'image/jpeg', { userId: 'user-123' });
+ * if (result.success) {
+ *   console.log('Stored at:', result.key);
+ * }
+ * ```
+ */
+export async function storeImageFromBuffer(
+  buffer: Buffer,
+  key: string,
+  contentType: string = 'image/png',
+  metadata: Record<string, string> = {}
+): Promise<{ success: boolean; key?: string; error?: string }> {
+  try {
+    const container = getContainerClient();
+    if (!container) {
+      return {
+        success: false,
+        error: 'Azure Blob Storage not configured',
+      };
+    }
+
+    // Get blob client for the key
+    const blobClient = container.getBlockBlobClient(key);
+
+    // Upload to Azure Blob Storage with metadata
+    await blobClient.uploadData(buffer, {
+      blobHTTPHeaders: {
+        blobContentType: contentType,
+        blobCacheControl: 'public, max-age=31536000', // Cache for 1 year
+      },
+      metadata: {
+        ...metadata,
+        storedAt: new Date().toISOString(),
+      },
+    });
+
+    return {
+      success: true,
+      key: key,
+    };
+  } catch (error) {
+    console.error('Azure Blob Storage buffer upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to store image from buffer',
+    };
+  }
+}
+
+/**
  * Build a public URL for a blob
  *
  * Note: This requires the container to have public access enabled

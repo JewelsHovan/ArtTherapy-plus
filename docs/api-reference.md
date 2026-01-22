@@ -1,6 +1,6 @@
 # API Reference
 
-Base URL: `https://arttherapy-plus-api.julienh15.workers.dev/api`
+Base URL: `https://arttherapy-plus-api.ambitioussand-bc135123.centralus.azurecontainerapps.io/api`
 Local: `http://localhost:8787/api`
 
 ## Authentication

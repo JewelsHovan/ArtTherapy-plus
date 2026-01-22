@@ -3,13 +3,16 @@
 ## System Overview
 
 ```
-Frontend (React 19 + Vite)     -->    Cloudflare Workers (API)
-    |                                        |
-    v                                        v
-Azure Static Web Apps              D1 (SQLite) + R2 (Object Storage)
-                                             |
-                                             v
-                                    OpenAI API + Microsoft OAuth
+Frontend (React 19 + Vite)          Backend (Express.js + TypeScript)
+        |                                       |
+        v                                       v
+Azure Static Web Apps              Azure Container Apps (Docker)
+                                               |
+                              +----------------+----------------+
+                              |                |                |
+                              v                v                v
+                       Azure SQL Server   Azure Blob    OpenAI API +
+                                          Storage       Microsoft OAuth
 ```
 
 ## Frontend Architecture
@@ -19,6 +22,7 @@ Azure Static Web Apps              D1 (SQLite) + R2 (Object Storage)
 - React Router v7 for client-side routing
 - Tailwind CSS 3.x with custom theme
 - Axios for HTTP with request/response interceptors
+- react-hot-toast for notifications
 
 ### Project Structure
 ```
@@ -26,15 +30,20 @@ frontend/
   src/
     components/
       auth/           # ProtectedRoute
-      common/         # Button, Logo, Skeleton, ErrorBoundary, LoadingButton
+      common/         # Button, Logo, Skeleton, ErrorBoundary, LoadingButton,
+                      # ConfirmDialog, EmptyState, ErrorMessage, PageHeader
       forms/          # TextInput, PasswordInput
       layout/         # AppLayout, Header
       modals/         # ImageModal, OnboardingModal
     contexts/         # AuthContext (user state, token management)
     pages/            # Route-level components
+      archived/       # Deprecated pages (About.jsx)
     services/         # api.js (painPlusAPI client)
     utils/            # imageCompression, storage
     styles/           # CSS files
+  public/
+    assets/           # Static assets, logo variants
+    oauth-callback.html  # Microsoft OAuth callback handler
 ```
 
 ### Route Structure
@@ -42,7 +51,6 @@ frontend/
 |-------|-----------|------|-------------|
 | / | Welcome | Public | Landing page |
 | /register | Registration | Public | Sign up/login form |
-| /about | About | Public | Information page |
 | /mode | ModeSelection | Protected | Create/Inspire selection |
 | /describe | PainDescription | Protected | Pain input form |
 | /visualize | Visualize | Protected | Generated art display |
@@ -53,6 +61,8 @@ frontend/
 | /journal | Journal | Protected | Reflection history |
 | /profile | Profile | Protected | User profile settings |
 | /settings | Settings | Protected | App preferences |
+| /componentshowcase | ComponentShowcase | Protected | Dev: Component testing |
+| * | NotFound | Public | 404 page |
 
 ### State Management
 - AuthContext: User authentication state (user, token, isAuthenticated, isLoading)
@@ -60,84 +70,128 @@ frontend/
 - localStorage: JWT token persistence (`auth_token`)
 - sessionStorage: OAuth PKCE code verifier, redirect paths
 
-## Backend Architecture (Cloudflare Workers)
+## Backend Architecture (Azure Container Apps)
 
 ### Technology Stack
-- Cloudflare Workers (V8 isolates, edge computing)
-- Cloudflare D1 (SQLite at edge)
-- Cloudflare R2 (S3-compatible object storage)
+- Express.js 4.x with TypeScript
+- Drizzle ORM for database operations
+- Azure SQL Server (tedious driver)
+- Azure Blob Storage (@azure/storage-blob)
 - OpenAI SDK 4.x for AI integration
-- jose 6.x for JWT handling
+- jose 5.x for JWT handling
+- express-rate-limit for brute force protection
+- helmet for security headers
 
 ### Project Structure
 ```
-cloudflare-worker/
+azure-backend/
   src/
-    index.js          # Main router, request handling
+    index.ts          # Express server, middleware setup
+    config/
+      index.ts        # Environment configuration
+      cors.ts         # CORS middleware with origin validation
     handlers/
-      auth.js         # Microsoft OAuth, email/password auth
-      gallery.js      # Save/fetch/delete gallery items
-      journal.js      # Journal entry CRUD
-      user.js         # Profile management
+      auth.ts         # Microsoft OAuth, email/password auth
+      gallery.ts      # Save/fetch/delete gallery items
+      generate.ts     # DALL-E 3 image generation, GPT prompts
+      journal.ts      # Journal entry CRUD
+      user.ts         # Profile management
     middleware/
-      auth.js         # JWT verification
-      rateLimit.js    # Brute force protection
+      auth.ts         # JWT verification
+      errorHandler.ts # Global error handling
+      rateLimit.ts    # Rate limiting configuration
+    routes/
+      index.ts        # Route aggregator
+      auth.routes.ts  # /api/auth/* endpoints
+      gallery.routes.ts
+      generate.routes.ts
+      journal.routes.ts
+      user.routes.ts
+    services/
+      openai.ts       # OpenAI API integration
+      storage.ts      # Azure Blob Storage operations
     utils/
-      jwt.js          # Token generation/verification
-      password.js     # PBKDF2 hashing
-      response.js     # JSON response helpers, CORS
-      storage.js      # R2 image storage
+      jwt.ts          # Token generation/verification
+      password.ts     # PBKDF2 hashing
     db/
-      schema.sql      # D1 database schema
+      index.ts        # Database connection pool
+      schema.ts       # Drizzle schema definitions
+  Dockerfile          # Multi-stage build for production
+  tsconfig.json       # TypeScript configuration
 ```
 
-### D1 Database Schema
+### Database Schema (Azure SQL Server)
 ```sql
 users (
-  id, microsoft_id, email, name, avatar_url,
-  password_hash, password_salt, auth_provider,
-  age, sex, gender, symptoms, location, languages,
-  occupation, relationship_status, prescriptions, activity_level,
-  settings, created_at, updated_at
+  id VARCHAR(36) PRIMARY KEY,
+  microsoft_id VARCHAR(255),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255),
+  avatar_url TEXT,
+  password_hash VARCHAR(255),
+  password_salt VARCHAR(255),
+  auth_provider VARCHAR(20) DEFAULT 'email',
+  -- Profile fields
+  age INT,
+  sex VARCHAR(50),
+  gender VARCHAR(50),
+  symptoms TEXT,           -- JSON array
+  location VARCHAR(255),
+  languages TEXT,          -- JSON array
+  occupation VARCHAR(255),
+  relationship_status VARCHAR(50),
+  prescriptions TEXT,      -- JSON array
+  activity_level VARCHAR(50),
+  settings TEXT,           -- JSON object
+  created_at DATETIME2 DEFAULT GETDATE(),
+  updated_at DATETIME2 DEFAULT GETDATE()
 )
 
 gallery_items (
-  id, user_id, image_url, description,
-  prompt_used, mode, created_at
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) FOREIGN KEY REFERENCES users(id),
+  image_url TEXT NOT NULL,
+  description TEXT,
+  prompt_used TEXT,
+  mode VARCHAR(50),        -- 'create' or 'edit'
+  created_at DATETIME2 DEFAULT GETDATE()
 )
 
 journal_entries (
-  id, user_id, gallery_item_id,
-  reflection_questions, responses, notes,
-  created_at, updated_at
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) FOREIGN KEY REFERENCES users(id),
+  gallery_item_id VARCHAR(36) FOREIGN KEY REFERENCES gallery_items(id),
+  reflection_questions TEXT,  -- JSON array
+  responses TEXT,             -- JSON array
+  notes TEXT,
+  created_at DATETIME2 DEFAULT GETDATE(),
+  updated_at DATETIME2 DEFAULT GETDATE()
 )
-
-rate_limits (id, ip, endpoint, timestamp)
 ```
 
-### R2 Storage Structure
+### Azure Blob Storage Structure
 ```
-arttherapy-plus-images/
+arttherapyplus/
   generated/{user_id}/{timestamp}-{uuid}.png
   edited/{user_id}/{timestamp}-{uuid}.png
 ```
-Public URL: `https://pub-57ea486a31284eb2903893d8e0e9d516.r2.dev`
 
 ## API Endpoints
 
 ### Authentication (Public)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/signup | Email/password registration (rate limited: 3/hour) |
-| POST | /api/auth/login | Email/password login (rate limited: 5/min) |
-| POST | /api/auth/microsoft/callback | Receives access_token, returns JWT |
+| POST | /api/auth/signup | Email/password registration (3/hour rate limit) |
+| POST | /api/auth/login | Email/password login (5/min rate limit) |
+| POST | /api/auth/microsoft/callback | Exchange access_token for JWT |
 | POST | /api/auth/verify | Verify JWT, return user data |
 | POST | /api/auth/logout | Client-side logout stub |
+| GET | /api/health | Health check endpoint |
 
 ### AI Generation (Protected)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/generate/image | DALL-E 3 art generation from pain description |
+| POST | /api/generate/image | DALL-E 3 art from pain description |
 | POST | /api/generate/prompt | GPT-4o-mini creative prompts |
 | POST | /api/edit/image | Vision analysis + DALL-E 3 style transfer |
 | POST | /api/reflect | GPT-4o-mini reflection questions |
@@ -174,10 +228,38 @@ Public URL: `https://pub-57ea486a31284eb2903893d8e0e9d516.r2.dev`
 ### Rate Limiting
 - Login: 5 attempts/minute/IP
 - Signup: 3 attempts/hour/IP
-- Stored in D1 with cleanup of old entries
+- General API: 100 requests/minute
+- Stored in memory (express-rate-limit)
 
 ### CORS
 Allowed origins:
-- `https://arttherapy-plus.pages.dev`
-- `https://witty-glacier-01b4b7710.2.azurestaticapps.net`
-- `http://localhost:5173`
+- `https://witty-glacier-01b4b7710.2.azurestaticapps.net` (production)
+- `http://localhost:5173` (development)
+
+### Security Headers (Helmet)
+- Content-Security-Policy
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: DENY
+- Referrer-Policy: strict-origin-when-cross-origin
+
+## Deployment Architecture
+
+### Frontend (Azure Static Web Apps)
+- Automatic deployment via GitHub Actions on push to main
+- Path filter: `frontend/**`
+- Build: `npm run build` -> `dist/`
+- Environment variables injected at build time
+
+### Backend (Azure Container Apps)
+- Docker multi-stage build
+- Automatic deployment via GitHub Actions on push to main
+- Path filter: `azure-backend/**`
+- Azure Container Registry for image storage
+- Environment variables via Azure secrets
+
+### Infrastructure
+- Resource Group: Contains all Azure resources
+- Azure Container Registry: Docker image storage
+- Azure Container Apps Environment: Serverless container hosting
+- Azure SQL Server: Managed SQL database
+- Azure Storage Account: Blob storage for images
