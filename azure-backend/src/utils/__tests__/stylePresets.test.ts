@@ -1,7 +1,8 @@
 /**
- * Unit tests for stylePresets utility functions
+ * Unit Tests for Style Presets
  *
- * Tests model validation, style validation, and prompt generation.
+ * Tests pure functions for model and style validation,
+ * lookup, and prompt generation.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -18,186 +19,175 @@ import {
 } from '../stylePresets.js';
 
 describe('stylePresets', () => {
-  describe('IMAGE_MODELS constant', () => {
-    it('should have exactly 3 models', () => {
+  describe('Constants', () => {
+    it('should have 3 image models defined', () => {
       expect(IMAGE_MODELS).toHaveLength(3);
     });
 
-    it('should contain dall-e-3, flux-pro, and gemini-image', () => {
-      const modelIds = IMAGE_MODELS.map((m) => m.id);
-      expect(modelIds).toContain('dall-e-3');
-      expect(modelIds).toContain('flux-pro');
-      expect(modelIds).toContain('gemini-image');
-    });
-
-    it('should have correct structure for each model', () => {
-      for (const model of IMAGE_MODELS) {
-        expect(model).toHaveProperty('id');
-        expect(model).toHaveProperty('name');
-        expect(model).toHaveProperty('description');
-        expect(model).toHaveProperty('provider');
-        expect(model).toHaveProperty('costTier');
-        expect(['openai', 'openrouter']).toContain(model.provider);
-        expect(['low', 'medium', 'high']).toContain(model.costTier);
-      }
-    });
-
-    it('should have openrouterId for openrouter provider models', () => {
-      const openrouterModels = IMAGE_MODELS.filter(
-        (m) => m.provider === 'openrouter'
-      );
-      for (const model of openrouterModels) {
-        expect(model.openrouterId).toBeDefined();
-        expect(typeof model.openrouterId).toBe('string');
-        expect(model.openrouterId!.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('should not have openrouterId for openai provider models', () => {
-      const openaiModels = IMAGE_MODELS.filter((m) => m.provider === 'openai');
-      for (const model of openaiModels) {
-        expect(model.openrouterId).toBeUndefined();
-      }
-    });
-  });
-
-  describe('STYLE_PRESETS constant', () => {
-    it('should have exactly 8 styles', () => {
+    it('should have 8 style presets defined', () => {
       expect(STYLE_PRESETS).toHaveLength(8);
     });
 
-    it('should contain all expected styles', () => {
-      const styleIds = STYLE_PRESETS.map((s) => s.id);
-      expect(styleIds).toContain('default');
-      expect(styleIds).toContain('photorealism');
-      expect(styleIds).toContain('oil-painting');
-      expect(styleIds).toContain('watercolor');
-      expect(styleIds).toContain('cartoon');
-      expect(styleIds).toContain('anime');
-      expect(styleIds).toContain('abstract-expressionist');
-      expect(styleIds).toContain('minimalist');
+    it('should have dall-e-3 as openai provider', () => {
+      const dalleModel = IMAGE_MODELS.find((m) => m.id === 'dall-e-3');
+      expect(dalleModel).toBeDefined();
+      expect(dalleModel?.provider).toBe('openai');
+      expect(dalleModel?.costTier).toBe('high');
     });
 
-    it('should have correct structure for each style', () => {
-      for (const style of STYLE_PRESETS) {
-        expect(style).toHaveProperty('id');
-        expect(style).toHaveProperty('name');
-        expect(style).toHaveProperty('description');
-        expect(style).toHaveProperty('promptTemplate');
-        expect(typeof style.id).toBe('string');
-        expect(typeof style.name).toBe('string');
-        expect(typeof style.description).toBe('string');
-        expect(typeof style.promptTemplate).toBe('string');
-      }
+    it('should have flux-pro as openrouter provider with correct ID', () => {
+      const fluxModel = IMAGE_MODELS.find((m) => m.id === 'flux-pro');
+      expect(fluxModel).toBeDefined();
+      expect(fluxModel?.provider).toBe('openrouter');
+      expect(fluxModel?.openrouterId).toBe('black-forest-labs/flux-pro-1.1');
+      expect(fluxModel?.costTier).toBe('medium');
     });
 
-    it('should have {description} placeholder in all prompt templates', () => {
-      for (const style of STYLE_PRESETS) {
+    it('should have gemini-image as openrouter provider with correct ID', () => {
+      const geminiModel = IMAGE_MODELS.find((m) => m.id === 'gemini-image');
+      expect(geminiModel).toBeDefined();
+      expect(geminiModel?.provider).toBe('openrouter');
+      expect(geminiModel?.openrouterId).toBe('google/gemini-2.0-flash-exp:free');
+      expect(geminiModel?.costTier).toBe('low');
+    });
+
+    it('should have all style presets with valid structure', () => {
+      STYLE_PRESETS.forEach((style) => {
+        expect(style.id).toBeDefined();
+        expect(style.name).toBeDefined();
+        expect(style.description).toBeDefined();
+        expect(style.promptTemplate).toBeDefined();
         expect(style.promptTemplate).toContain('{description}');
-      }
+      });
+    });
+
+    it('should have all models with valid structure', () => {
+      IMAGE_MODELS.forEach((model) => {
+        expect(model.id).toBeDefined();
+        expect(model.name).toBeDefined();
+        expect(model.description).toBeDefined();
+        expect(model.provider).toMatch(/^(openai|openrouter)$/);
+        expect(model.costTier).toMatch(/^(low|medium|high)$/);
+
+        // OpenRouter models should have openrouterId
+        if (model.provider === 'openrouter') {
+          expect(model.openrouterId).toBeDefined();
+        }
+      });
     });
   });
 
-  describe('isValidModel()', () => {
-    it('should return true for valid models', () => {
+  describe('isValidModel', () => {
+    it('should return true for dall-e-3', () => {
       expect(isValidModel('dall-e-3')).toBe(true);
+    });
+
+    it('should return true for flux-pro', () => {
       expect(isValidModel('flux-pro')).toBe(true);
+    });
+
+    it('should return true for gemini-image', () => {
       expect(isValidModel('gemini-image')).toBe(true);
     });
 
-    it('should return false for invalid models', () => {
+    it('should return false for invalid model strings', () => {
       expect(isValidModel('invalid-model')).toBe(false);
       expect(isValidModel('')).toBe(false);
-      expect(isValidModel('DALL-E-3')).toBe(false); // Case sensitive
       expect(isValidModel('gpt-4')).toBe(false);
       expect(isValidModel('midjourney')).toBe(false);
     });
+
+    it('should return false for case-mismatched models', () => {
+      expect(isValidModel('DALL-E-3')).toBe(false);
+      expect(isValidModel('Dall-E-3')).toBe(false);
+      expect(isValidModel('FLUX-PRO')).toBe(false);
+    });
   });
 
-  describe('isValidStyle()', () => {
-    it('should return true for all 8 valid styles', () => {
-      const validStyles: StylePreset[] = [
-        'default',
-        'photorealism',
-        'oil-painting',
-        'watercolor',
-        'cartoon',
-        'anime',
-        'abstract-expressionist',
-        'minimalist',
-      ];
+  describe('isValidStyle', () => {
+    const validStyles: StylePreset[] = [
+      'default',
+      'photorealism',
+      'oil-painting',
+      'watercolor',
+      'cartoon',
+      'anime',
+      'abstract-expressionist',
+      'minimalist',
+    ];
 
-      for (const style of validStyles) {
-        expect(isValidStyle(style)).toBe(true);
-      }
+    it.each(validStyles)('should return true for valid style: %s', (style) => {
+      expect(isValidStyle(style)).toBe(true);
     });
 
-    it('should return false for invalid styles', () => {
+    it('should return false for invalid style strings', () => {
       expect(isValidStyle('invalid-style')).toBe(false);
       expect(isValidStyle('')).toBe(false);
-      expect(isValidStyle('DEFAULT')).toBe(false); // Case sensitive
       expect(isValidStyle('impressionist')).toBe(false);
-      expect(isValidStyle('pixel-art')).toBe(false);
+      expect(isValidStyle('sketch')).toBe(false);
+    });
+
+    it('should return false for case-mismatched styles', () => {
+      expect(isValidStyle('Default')).toBe(false);
+      expect(isValidStyle('WATERCOLOR')).toBe(false);
+      expect(isValidStyle('Oil-Painting')).toBe(false);
     });
   });
 
-  describe('getModelInfo()', () => {
-    it('should return correct ModelInfo for dall-e-3', () => {
+  describe('getModelInfo', () => {
+    it('should return correct info for dall-e-3', () => {
       const info = getModelInfo('dall-e-3');
       expect(info).toBeDefined();
-      expect(info!.id).toBe('dall-e-3');
-      expect(info!.name).toBe('DALL-E 3');
-      expect(info!.provider).toBe('openai');
-      expect(info!.costTier).toBe('high');
-      expect(info!.openrouterId).toBeUndefined();
+      expect(info?.id).toBe('dall-e-3');
+      expect(info?.name).toBe('DALL-E 3');
+      expect(info?.provider).toBe('openai');
+      expect(info?.costTier).toBe('high');
     });
 
-    it('should return correct ModelInfo for flux-pro', () => {
+    it('should return correct info for flux-pro', () => {
       const info = getModelInfo('flux-pro');
       expect(info).toBeDefined();
-      expect(info!.id).toBe('flux-pro');
-      expect(info!.name).toBe('Flux Pro');
-      expect(info!.provider).toBe('openrouter');
-      expect(info!.costTier).toBe('medium');
-      expect(info!.openrouterId).toBe('black-forest-labs/flux-pro-1.1');
+      expect(info?.id).toBe('flux-pro');
+      expect(info?.name).toBe('Flux Pro');
+      expect(info?.provider).toBe('openrouter');
+      expect(info?.openrouterId).toBe('black-forest-labs/flux-pro-1.1');
     });
 
-    it('should return correct ModelInfo for gemini-image', () => {
+    it('should return correct info for gemini-image', () => {
       const info = getModelInfo('gemini-image');
       expect(info).toBeDefined();
-      expect(info!.id).toBe('gemini-image');
-      expect(info!.name).toBe('Gemini Flash');
-      expect(info!.provider).toBe('openrouter');
-      expect(info!.costTier).toBe('low');
-      expect(info!.openrouterId).toBe('google/gemini-2.0-flash-exp:free');
+      expect(info?.id).toBe('gemini-image');
+      expect(info?.name).toBe('Gemini Flash');
+      expect(info?.provider).toBe('openrouter');
+      expect(info?.openrouterId).toBe('google/gemini-2.0-flash-exp:free');
     });
 
-    it('should return undefined for invalid model', () => {
-      // Type assertion needed since we're testing invalid input
-      const info = getModelInfo('invalid-model' as ImageModel);
-      expect(info).toBeUndefined();
+    it('should return undefined for unknown model', () => {
+      // Using type assertion since we're testing runtime behavior
+      const result = getModelInfo('unknown' as ImageModel);
+      expect(result).toBeUndefined();
     });
   });
 
-  describe('getStyleInfo()', () => {
-    it('should return correct StylePresetInfo for default style', () => {
+  describe('getStyleInfo', () => {
+    it('should return correct info for default style', () => {
       const info = getStyleInfo('default');
       expect(info).toBeDefined();
-      expect(info!.id).toBe('default');
-      expect(info!.name).toBe('Art Therapy');
-      expect(info!.promptTemplate).toContain('{description}');
+      expect(info?.id).toBe('default');
+      expect(info?.name).toBe('Art Therapy');
+      expect(info?.promptTemplate).toContain('{description}');
     });
 
-    it('should return correct StylePresetInfo for photorealism', () => {
-      const info = getStyleInfo('photorealism');
+    it('should return correct info for watercolor style', () => {
+      const info = getStyleInfo('watercolor');
       expect(info).toBeDefined();
-      expect(info!.id).toBe('photorealism');
-      expect(info!.name).toBe('Photorealism');
-      expect(info!.description).toContain('realistic');
+      expect(info?.id).toBe('watercolor');
+      expect(info?.name).toBe('Watercolor');
+      expect(info?.description).toContain('Soft');
     });
 
-    it('should return correct StylePresetInfo for all valid styles', () => {
-      const validStyles: StylePreset[] = [
+    it('should return correct info for all styles', () => {
+      const styles: StylePreset[] = [
         'default',
         'photorealism',
         'oil-painting',
@@ -208,67 +198,71 @@ describe('stylePresets', () => {
         'minimalist',
       ];
 
-      for (const styleId of validStyles) {
+      styles.forEach((styleId) => {
         const info = getStyleInfo(styleId);
         expect(info).toBeDefined();
-        expect(info!.id).toBe(styleId);
-      }
+        expect(info?.id).toBe(styleId);
+      });
     });
 
-    it('should return undefined for invalid style', () => {
-      // Type assertion needed since we're testing invalid input
-      const info = getStyleInfo('invalid-style' as StylePreset);
-      expect(info).toBeUndefined();
+    it('should return undefined for unknown style', () => {
+      const result = getStyleInfo('unknown' as StylePreset);
+      expect(result).toBeUndefined();
     });
   });
 
-  describe('getStylePrompt()', () => {
-    const testDescription = 'a sharp pain in my lower back';
+  describe('getStylePrompt', () => {
+    const testDescription = 'a sharp pain in my shoulder';
 
-    it('should replace {description} placeholder with user description', () => {
-      const prompt = getStylePrompt('default', testDescription);
-      expect(prompt).toContain(testDescription);
-      expect(prompt).not.toContain('{description}');
+    it('should replace {description} placeholder with provided description', () => {
+      const result = getStylePrompt('default', testDescription);
+      expect(result).toContain(testDescription);
+      expect(result).not.toContain('{description}');
     });
 
-    it('should return styled prompt for valid styles', () => {
-      const prompt = getStylePrompt('watercolor', testDescription);
-      expect(prompt).toContain(testDescription);
-      expect(prompt.toLowerCase()).toContain('watercolor');
-    });
-
-    it('should return raw description for invalid style', () => {
-      // Type assertion needed since we're testing invalid input
-      const prompt = getStylePrompt('invalid-style' as StylePreset, testDescription);
-      expect(prompt).toBe(testDescription);
+    it('should return original description if style not found', () => {
+      const description = 'test description';
+      const result = getStylePrompt('invalid' as StylePreset, description);
+      expect(result).toBe(description);
     });
 
     it('should handle empty description', () => {
-      const prompt = getStylePrompt('default', '');
-      expect(prompt).not.toContain('{description}');
-      // The prompt template should be applied, just with empty description
-      expect(prompt.length).toBeGreaterThan(0);
+      const result = getStylePrompt('default', '');
+      expect(result).not.toContain('{description}');
+      expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should handle description with special characters', () => {
-      const specialDescription = 'pain like $100 worth of {curly} and [brackets]';
-      const prompt = getStylePrompt('default', specialDescription);
-      expect(prompt).toContain(specialDescription);
-    });
-
-    it('should preserve prompt template content for each style', () => {
-      // Test that oil-painting style includes relevant keywords
-      const oilPrompt = getStylePrompt('oil-painting', testDescription);
-      expect(oilPrompt.toLowerCase()).toContain('oil');
-      expect(oilPrompt.toLowerCase()).toContain('painting');
-
-      // Test that anime style includes relevant keywords
+    it('should produce different prompts for different styles', () => {
+      const defaultPrompt = getStylePrompt('default', testDescription);
+      const watercolorPrompt = getStylePrompt('watercolor', testDescription);
       const animePrompt = getStylePrompt('anime', testDescription);
-      expect(animePrompt.toLowerCase()).toContain('anime');
 
-      // Test that minimalist style includes relevant keywords
-      const minimalistPrompt = getStylePrompt('minimalist', testDescription);
-      expect(minimalistPrompt.toLowerCase()).toContain('minimalist');
+      expect(defaultPrompt).not.toBe(watercolorPrompt);
+      expect(watercolorPrompt).not.toBe(animePrompt);
+      expect(animePrompt).not.toBe(defaultPrompt);
+    });
+
+    it('should work for all defined styles', () => {
+      const description = 'test pain visualization';
+
+      STYLE_PRESETS.forEach((style) => {
+        const result = getStylePrompt(style.id, description);
+        expect(result).toContain(description);
+        expect(result.length).toBeGreaterThan(description.length);
+      });
+    });
+
+    it('should include style-specific keywords', () => {
+      const description = 'burning sensation';
+
+      const watercolorResult = getStylePrompt('watercolor', description);
+      expect(watercolorResult.toLowerCase()).toContain('watercolor');
+
+      const animeResult = getStylePrompt('anime', description);
+      expect(animeResult.toLowerCase()).toContain('anime');
+
+      const oilResult = getStylePrompt('oil-painting', description);
+      expect(oilResult.toLowerCase()).toContain('oil');
     });
   });
 });

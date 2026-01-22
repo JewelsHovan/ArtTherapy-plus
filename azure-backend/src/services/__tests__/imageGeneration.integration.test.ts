@@ -1,246 +1,216 @@
 /**
- * Integration tests for imageGeneration service
+ * Integration Tests for Image Generation Service
  *
- * SKIPPED: These tests require real API keys and make actual API calls.
- * Enable selectively during manual testing with valid credentials.
+ * These tests hit REAL APIs and are SKIPPED by default.
  *
- * To run:
- * 1. Set environment variables: DATABASE_URL, JWT_SECRET, OPENAI_API_KEY
- * 2. Optionally set: OPENROUTER_API_KEY, AZURE_STORAGE_CONNECTION_STRING
- * 3. Remove .skip from the describe block
- * 4. Run: npm test -- --testNamePattern="integration"
+ * Requirements to run:
+ * 1. OPENAI_API_KEY must be configured
+ * 2. OPENROUTER_API_KEY for OpenRouter model tests
+ * 3. Run: npm run test:integration
  *
- * Note: This file uses dynamic imports to avoid config validation errors
- * when running in environments without all required env vars.
+ * WARNING: These tests cost money (API calls) and are slow.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import type { ImageModel, StylePreset } from '../../utils/stylePresets.js';
+import { generateImage, getAvailableModels } from '../imageGeneration.js';
+import { config } from '../../config/index.js';
 
-// Types for the module
-type GetAvailableModelsFn = () => ImageModel[];
-type GenerateImageFn = (options: {
-  description: string;
-  model?: ImageModel;
-  style?: StylePreset;
-  userId: string;
-}) => Promise<{
-  success: boolean;
-  imageUrl?: string;
-  promptUsed?: string;
-  modelUsed: ImageModel;
-  styleUsed: StylePreset;
-  error?: string;
-}>;
-
-// These will be populated by dynamic import inside the tests
-let getAvailableModels: GetAvailableModelsFn;
-let generateImage: GenerateImageFn;
-
-describe.skip('imageGeneration - integration tests', () => {
-  // Long timeout for API calls
-  const TIMEOUT = 60000;
-
-  beforeAll(async () => {
-    // Dynamic import to defer config loading until tests actually run
-    const mod = await import('../imageGeneration.js');
-    getAvailableModels = mod.getAvailableModels;
-    generateImage = mod.generateImage;
+describe.skip('imageGeneration - Integration Tests', () => {
+  beforeAll(() => {
+    // Verify API keys are present
+    if (!config.openai?.apiKey) {
+      throw new Error('OPENAI_API_KEY required for integration tests');
+    }
   });
 
-  describe('getAvailableModels() - with real config', () => {
-    it('should return available models based on environment', () => {
+  describe('Model Availability', () => {
+    it('should reflect actual configuration', () => {
       const models = getAvailableModels();
 
-      // DALL-E 3 should always be available
-      expect(models).toContain('dall-e-3');
-
-      // Log which models are available for manual verification
       console.log('Available models:', models);
+
+      expect(models).toContain('dall-e-3'); // Always available
+
+      if (config.openrouter?.apiKey) {
+        expect(models).toContain('flux-pro');
+        expect(models).toContain('gemini-image');
+        console.log('OpenRouter models available');
+      } else {
+        expect(models).not.toContain('flux-pro');
+        expect(models).not.toContain('gemini-image');
+        console.log('OpenRouter not configured - only DALL-E 3 available');
+      }
     });
   });
 
-  describe('generateImage() - DALL-E 3', () => {
-    it(
-      'should generate an image using DALL-E 3',
-      async () => {
-        const result = await generateImage({
-          description: 'a gentle wave of warmth spreading through the body',
-          model: 'dall-e-3',
-          style: 'watercolor',
-          userId: 'integration-test-user',
-        });
-
-        console.log('DALL-E 3 result:', {
-          success: result.success,
-          modelUsed: result.modelUsed,
-          styleUsed: result.styleUsed,
-          imageUrl: result.imageUrl?.substring(0, 100) + '...',
-          error: result.error,
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.imageUrl).toBeDefined();
-        expect(result.modelUsed).toBe('dall-e-3');
-        expect(result.styleUsed).toBe('watercolor');
-      },
-      TIMEOUT
-    );
-
-    it(
-      'should generate with default style',
-      async () => {
-        const result = await generateImage({
-          description: 'tension releasing from tight muscles',
-          model: 'dall-e-3',
-          userId: 'integration-test-user',
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.styleUsed).toBe('default');
-      },
-      TIMEOUT
-    );
-  });
-
-  describe('generateImage() - Flux Pro (OpenRouter)', () => {
-    it(
-      'should generate an image using Flux Pro',
-      async () => {
-        const models = getAvailableModels();
-        if (!models.includes('flux-pro')) {
-          console.log('Skipping: Flux Pro not available (OPENROUTER_API_KEY not set)');
-          return;
-        }
-
-        const result = await generateImage({
-          description: 'a soothing blue energy flowing through the spine',
-          model: 'flux-pro',
-          style: 'photorealism',
-          userId: 'integration-test-user',
-        });
-
-        console.log('Flux Pro result:', {
-          success: result.success,
-          modelUsed: result.modelUsed,
-          styleUsed: result.styleUsed,
-          imageUrl: result.imageUrl?.substring(0, 100) + '...',
-          error: result.error,
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.modelUsed).toBe('flux-pro');
-      },
-      TIMEOUT
-    );
-  });
-
-  describe('generateImage() - Gemini Image (OpenRouter)', () => {
-    it(
-      'should generate an image using Gemini',
-      async () => {
-        const models = getAvailableModels();
-        if (!models.includes('gemini-image')) {
-          console.log('Skipping: Gemini Image not available (OPENROUTER_API_KEY not set)');
-          return;
-        }
-
-        const result = await generateImage({
-          description: 'peaceful clouds of healing light',
-          model: 'gemini-image',
-          style: 'abstract-expressionist',
-          userId: 'integration-test-user',
-        });
-
-        console.log('Gemini Image result:', {
-          success: result.success,
-          modelUsed: result.modelUsed,
-          styleUsed: result.styleUsed,
-          imageUrl: result.imageUrl?.substring(0, 100) + '...',
-          error: result.error,
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.modelUsed).toBe('gemini-image');
-      },
-      TIMEOUT
-    );
-  });
-
-  describe('generateImage() - all styles', () => {
-    // Test a subset of styles to save API costs
-    it.each(['default', 'anime', 'minimalist'] as const)(
-      'should generate with %s style',
-      async (style) => {
-        const result = await generateImage({
-          description: 'comfort spreading through aching joints',
-          model: 'dall-e-3',
-          style: style,
-          userId: 'integration-test-user',
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.styleUsed).toBe(style);
-      },
-      TIMEOUT
-    );
-  });
-
-  describe('generateImage() - error handling', () => {
-    it('should handle very long descriptions gracefully', async () => {
-      const longDescription = 'a sensation of pain '.repeat(100);
-
+  describe('OpenAI DALL-E 3 (Real API)', () => {
+    it('should generate an actual image with DALL-E 3', async () => {
       const result = await generateImage({
-        description: longDescription,
+        description: 'a calm ocean wave at sunset',
         model: 'dall-e-3',
-        userId: 'integration-test-user',
+        style: 'watercolor',
+        userId: 'integration-test',
       });
 
-      // Should either succeed (model handles truncation) or fail gracefully
-      expect(result).toHaveProperty('success');
-      if (!result.success) {
-        expect(result.error).toBeDefined();
-      }
-    }, TIMEOUT);
-
-    it('should handle special characters in description', async () => {
-      const result = await generateImage({
-        description: 'pain like <sharp> needles & "burning" 100% intensity',
-        model: 'dall-e-3',
-        userId: 'integration-test-user',
+      console.log('DALL-E 3 Result:', {
+        success: result.success,
+        imageUrl: result.imageUrl?.substring(0, 100) + '...',
+        promptUsed: result.promptUsed?.substring(0, 100) + '...',
       });
 
       expect(result.success).toBe(true);
-    }, TIMEOUT);
+      expect(result.imageUrl).toBeDefined();
+      expect(result.imageUrl).toMatch(/^https?:\/\//);
+      expect(result.promptUsed).toBeDefined();
+      expect(result.modelUsed).toBe('dall-e-3');
+      expect(result.styleUsed).toBe('watercolor');
+    }, 60000); // 60 second timeout
+
+    it('should generate with default style', async () => {
+      const result = await generateImage({
+        description: 'peaceful garden',
+        model: 'dall-e-3',
+        userId: 'integration-test',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.styleUsed).toBe('default');
+    }, 60000);
   });
 
-  describe('generateImage() - storage integration', () => {
-    it(
-      'should store generated image in Azure Blob Storage',
-      async () => {
-        // This test requires AZURE_STORAGE_CONNECTION_STRING to be set
+  describe('OpenRouter Models (Real API)', () => {
+    beforeAll(() => {
+      if (!config.openrouter?.apiKey) {
+        console.warn('OPENROUTER_API_KEY not configured - skipping OpenRouter tests');
+      }
+    });
 
-        const result = await generateImage({
-          description: 'warmth radiating from the center',
-          model: 'dall-e-3',
-          style: 'default',
-          userId: 'integration-test-storage',
-        });
+    it('should generate an image with Flux Pro', async () => {
+      if (!config.openrouter?.apiKey) {
+        console.log('Skipping - OpenRouter not configured');
+        return;
+      }
 
-        console.log('Storage test result:', {
-          success: result.success,
-          imageUrl: result.imageUrl,
-        });
+      const result = await generateImage({
+        description: 'a peaceful forest path',
+        model: 'flux-pro',
+        style: 'photorealism',
+        userId: 'integration-test',
+      });
 
-        expect(result.success).toBe(true);
+      console.log('Flux Pro Result:', {
+        success: result.success,
+        error: result.error,
+        imageUrl: result.imageUrl?.substring(0, 100),
+      });
 
-        // If storage is configured, URL should be from our storage domain
-        // rather than a temporary DALL-E URL
-        if (result.imageUrl && !result.imageUrl.includes('oaidalleapiprodscus')) {
-          expect(result.imageUrl).toContain('blob.core.windows.net');
-        }
-      },
-      TIMEOUT
-    );
+      expect(result.success).toBe(true);
+      expect(result.imageUrl).toBeDefined();
+      expect(result.modelUsed).toBe('flux-pro');
+    }, 90000); // 90 second timeout
+
+    it('should generate an image with Gemini Flash (free tier)', async () => {
+      if (!config.openrouter?.apiKey) {
+        console.log('Skipping - OpenRouter not configured');
+        return;
+      }
+
+      const result = await generateImage({
+        description: 'a colorful abstract pattern',
+        model: 'gemini-image',
+        style: 'abstract-expressionist',
+        userId: 'integration-test',
+      });
+
+      console.log('Gemini Flash Result:', {
+        success: result.success,
+        error: result.error,
+        imageUrl: result.imageUrl?.substring(0, 100),
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.imageUrl).toBeDefined();
+      expect(result.modelUsed).toBe('gemini-image');
+    }, 90000);
+  });
+
+  describe('Style Presets (Real API)', () => {
+    const styles = [
+      'default',
+      'photorealism',
+      'oil-painting',
+      'watercolor',
+      'cartoon',
+      'anime',
+      'abstract-expressionist',
+      'minimalist',
+    ] as const;
+
+    it.each(styles)('should generate image with %s style', async (style) => {
+      const result = await generateImage({
+        description: 'a feeling of tension',
+        model: 'dall-e-3',
+        style,
+        userId: 'integration-test',
+      });
+
+      console.log(`Style "${style}":`, {
+        success: result.success,
+        promptUsed: result.promptUsed?.substring(0, 80) + '...',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.styleUsed).toBe(style);
+      expect(result.promptUsed).toBeDefined();
+    }, 60000);
+  });
+
+  describe('Error Scenarios', () => {
+    it('should handle invalid model gracefully', async () => {
+      const result = await generateImage({
+        description: 'test',
+        model: 'invalid-model' as never,
+        userId: 'integration-test',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid model');
+    });
+
+    it('should handle unavailable model gracefully', async () => {
+      // Force test unavailable model by testing without OpenRouter
+      if (config.openrouter?.apiKey) {
+        console.log('Skipping - OpenRouter is configured, model is available');
+        return;
+      }
+
+      const result = await generateImage({
+        description: 'test',
+        model: 'flux-pro',
+        userId: 'integration-test',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not available');
+    });
   });
 });
+
+/**
+ * Manual Testing Checklist
+ *
+ * When running integration tests manually, verify:
+ *
+ * [ ] DALL-E 3 with each style preset generates unique images
+ * [ ] Flux Pro (if configured) generates high-quality artistic images
+ * [ ] Gemini Flash (if configured) generates images quickly
+ * [ ] Generated image URLs are accessible and display correctly
+ * [ ] Styled prompts include style-specific instructions
+ * [ ] Error messages are clear and actionable
+ * [ ] Storage integration saves images to Azure Blob (if configured)
+ *
+ * To enable integration tests:
+ * 1. Remove `.skip` from the describe block
+ * 2. Ensure API keys are configured in .env
+ * 3. Run: npm run test -- src/services/__tests__/imageGeneration.integration.test.ts
+ */

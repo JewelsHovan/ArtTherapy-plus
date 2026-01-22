@@ -131,7 +131,10 @@ az containerapp update \
     JWT_SECRET="<secret>" \
     MICROSOFT_CLIENT_SECRET="<secret>" \
     OPENAI_API_KEY="<api-key>" \
+    OPENROUTER_API_KEY="<api-key>" \
     ALLOWED_ORIGINS="https://witty-glacier-01b4b7710.2.azurestaticapps.net"
+
+**Note**: `OPENROUTER_API_KEY` is optional. Without it, only DALL-E 3 is available for image generation. With it, users can choose between DALL-E 3, Flux Pro, and Gemini Flash via the model selector.
 ```
 
 ## Rollback

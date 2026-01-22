@@ -115,6 +115,9 @@ MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
 # OpenAI
 OPENAI_API_KEY=sk-...
 
+# OpenRouter (optional - enables Flux Pro and Gemini Flash models)
+OPENROUTER_API_KEY=sk-or-v1-...
+
 # CORS
 ALLOWED_ORIGINS=http://localhost:5173
 ```
@@ -179,7 +182,43 @@ npm run dev
 # Test all routes, especially protected ones
 ```
 
-### Backend Testing
+### Backend Unit Tests
+
+The backend uses Vitest for testing with full TypeScript and ESM support.
+
+```bash
+cd azure-backend
+
+# Run all unit tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run with coverage report
+npm run test:coverage
+```
+
+**Test Structure:**
+```
+src/
+├── services/
+│   └── __tests__/
+│       ├── imageGeneration.test.ts       # Unit tests (mocked)
+│       └── imageGeneration.integration.test.ts  # Real API tests
+└── utils/
+    └── __tests__/
+        └── stylePresets.test.ts          # Pure function tests
+```
+
+**Integration Tests:**
+Integration tests hit real APIs and are excluded from `npm test` by default. To run:
+1. Ensure API keys are configured in `.env`
+2. Run: `npm test -- src/services/__tests__/imageGeneration.integration.test.ts`
+
+**Warning**: Integration tests cost money (API calls) and are slow.
+
+### Backend Manual Testing
 ```bash
 # Local development
 npm run dev
@@ -190,6 +229,22 @@ curl http://localhost:8787/api/health
 # Test with auth
 curl -H "Authorization: Bearer <token>" http://localhost:8787/api/gallery
 ```
+
+### OpenRouter Setup (Optional)
+
+OpenRouter enables additional image generation models beyond DALL-E 3:
+- **Flux Pro** - High-quality artistic generation (medium cost)
+- **Gemini Flash** - Fast generation with free tier
+
+To enable:
+1. Get an API key at https://openrouter.ai/keys
+2. Add to `azure-backend/.env`:
+   ```
+   OPENROUTER_API_KEY=sk-or-v1-your-key-here
+   ```
+3. Restart the backend
+
+Without OpenRouter configured, only DALL-E 3 is available via the `/api/settings/image-models` endpoint.
 
 ## Deployment
 
