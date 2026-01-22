@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const Logo = ({ size = 'default', showText = false }) => {
   const navigate = useNavigate();
@@ -10,10 +11,25 @@ const Logo = ({ size = 'default', showText = false }) => {
     hero: 'w-[250px] h-[250px]',
   };
 
+  const handleClick = () => {
+    navigate('/');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate('/');
+    }
+  };
+
   return (
     <div
-      className="flex items-center gap-3 cursor-pointer group"
-      onClick={() => navigate('/')}
+      className="flex items-center gap-3 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="link"
+      aria-label="Go to home page"
     >
       <img
         src="/assets/logo-variants/brain-icon-v3.jpg"
@@ -29,6 +45,11 @@ const Logo = ({ size = 'default', showText = false }) => {
       )}
     </div>
   );
+};
+
+Logo.propTypes = {
+  size: PropTypes.oneOf(['small', 'default', 'large', 'hero']),
+  showText: PropTypes.bool
 };
 
 export default Logo;

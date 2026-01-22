@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import ImageModal from '../components/modals/ImageModal';
 import { galleryStorage } from '../utils/storage';
 import Skeleton, { GalleryGridSkeleton } from '../components/common/Skeleton';
+import PageHeader from '../components/common/PageHeader';
+import EmptyState from '../components/common/EmptyState';
+import ErrorMessage from '../components/common/ErrorMessage';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -11,6 +16,7 @@ const Gallery = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, item: null });
 
   useEffect(() => {
     loadGallery();
@@ -40,14 +46,26 @@ const Gallery = () => {
     setTimeout(() => setSelectedImage(null), 300);
   };
 
-  const handleDeleteImage = async (id, e) => {
+  const handleDeleteClick = (item, e) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this artwork?')) {
-      const success = await galleryStorage.delete(id);
-      if (success) {
-        setGalleryItems(prev => prev.filter(item => item.id !== id));
-      }
+    setDeleteConfirm({ isOpen: true, item });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.item) return;
+
+    const success = await galleryStorage.delete(deleteConfirm.item.id);
+    if (success) {
+      setGalleryItems(prev => prev.filter(item => item.id !== deleteConfirm.item.id));
+      toast.success('Artwork deleted successfully');
+    } else {
+      toast.error('Failed to delete artwork');
     }
+    setDeleteConfirm({ isOpen: false, item: null });
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ isOpen: false, item: null });
   };
 
   const handleReflect = (item, e) => {
@@ -62,7 +80,7 @@ const Gallery = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8">
+      <div className="min-h-screen p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="card-clean mb-8 animate-fadeIn">
             <Skeleton variant="title" width="40%" className="mb-2" />
@@ -76,103 +94,97 @@ const Gallery = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen p-8 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={loadGallery}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
-          >
-            Try Again
-          </button>
-        </div>
+      <div className="min-h-screen p-4 sm:p-6 md:p-8">
+        <ErrorMessage message={error} onRetry={loadGallery} variant="page" />
       </div>
     );
   }
 
+  const GalleryIcon = () => (
+    <svg className="w-16 h-16 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Combined Header Card */}
-        <div className="card-clean mb-8 animate-fadeIn">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Art Gallery</h1>
-              <p className="text-gray-600">Click on any artwork to see your pain description transform into art</p>
-            </div>
-            <div className="flex gap-4">
+        {/* Header */}
+        <PageHeader
+          title="Your Art Gallery"
+          description="Click on any artwork to see your pain description transform into art"
+          actions={
+            <>
               <button
                 onClick={() => navigate('/')}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg
-                  hover:bg-gray-200 transition-all duration-300 font-medium"
+                  hover:bg-gray-200 transition-all duration-200 font-medium"
               >
                 Back
               </button>
               <button
                 onClick={() => navigate('/mode')}
                 className="px-4 py-2 bg-primary text-white rounded-lg
-                  hover:bg-primary-hover transition-all duration-300 font-medium shadow-md"
+                  hover:bg-primary/90 transition-all duration-200 font-medium shadow-md"
               >
                 Create New
               </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* Gallery Grid */}
         {galleryItems.length === 0 ? (
-          <div className="card-clean py-16 text-center animate-fadeIn" style={{ animationDelay: '150ms' }}>
-            {/* Decorative illustration */}
-            <div className="mb-8">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-100 to-orange-100 rounded-full flex items-center justify-center">
-                <svg className="w-16 h-16 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-
-            <h2 className="text-2xl font-semibold text-gray-800 mb-3">
-              Your Healing Journey Awaits
-            </h2>
-            <p className="text-gray-600 max-w-md mx-auto mb-8 leading-relaxed">
-              Art therapy is a powerful way to express and process emotions.
-              Create your first piece and begin transforming your experience into something beautiful.
-            </p>
-
-            <button
-              onClick={() => navigate('/mode')}
-              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-full font-medium shadow-md hover:shadow-lg hover:bg-primary/90 transition-all duration-300"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Begin Creating
-            </button>
+          <div className="card-clean animate-fadeIn" style={{ animationDelay: '150ms' }}>
+            <EmptyState
+              icon={<GalleryIcon />}
+              title="Your Healing Journey Awaits"
+              description="Art therapy is a powerful way to express and process emotions. Create your first piece and begin transforming your experience into something beautiful."
+              action={
+                <button
+                  onClick={() => navigate('/mode')}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-full font-medium shadow-md hover:shadow-lg hover:bg-primary/90 transition-all duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Begin Creating
+                </button>
+              }
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {galleryItems.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-white rounded-xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl group animate-fadeIn"
+                className="bg-white rounded-xl overflow-hidden transform transition-all duration-200 hover:scale-105 hover:shadow-xl group animate-fadeIn"
                 style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
-                onClick={() => handleImageClick(item)}
               >
+                {/* Image area - this is the clickable element */}
                 <div className="relative aspect-square">
-                  <img
-                    src={item.imageUrl}
-                    alt="Generated artwork"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <p className="text-sm font-medium line-clamp-2">{item.description}</p>
+                  <button
+                    onClick={() => handleImageClick(item)}
+                    className="w-full h-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
+                    aria-label={`View artwork: ${item.description?.substring(0, 50) || 'Untitled'}...`}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt="Generated artwork"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <p className="text-sm font-medium line-clamp-2">{item.description}</p>
+                      </div>
                     </div>
-                  </div>
+                  </button>
+
+                  {/* Action buttons - separate from the main click area */}
                   <button
                     onClick={(e) => handleReflect(item, e)}
-                    className="absolute top-2 left-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="absolute top-2 left-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary"
                     title="Reflect on artwork"
                     aria-label="Reflect on artwork"
                   >
@@ -181,8 +193,8 @@ const Gallery = () => {
                     </svg>
                   </button>
                   <button
-                    onClick={(e) => handleDeleteImage(item.id, e)}
-                    className="absolute top-2 right-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    onClick={(e) => handleDeleteClick(item, e)}
+                    className="absolute top-2 right-2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
                     title="Delete artwork"
                     aria-label="Delete artwork"
                   >
@@ -214,6 +226,17 @@ const Gallery = () => {
             imageData={selectedImage}
           />
         )}
+
+        <ConfirmDialog
+          isOpen={deleteConfirm.isOpen}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="Delete Artwork"
+          message="Are you sure you want to delete this artwork? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+        />
       </div>
     </div>
   );

@@ -138,7 +138,11 @@ const PainDescription = () => {
           {/* Textarea Input */}
           <div className="mb-8">
             <div className="relative">
+              <label htmlFor="pain-description" className="sr-only">
+                Describe your pain
+              </label>
               <textarea
+                id="pain-description"
                 autoFocus
                 value={painDescription}
                 onChange={(e) => {

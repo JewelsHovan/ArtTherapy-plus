@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -28,6 +29,31 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Router>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              duration: 5000,
+              style: {
+                background: '#fff',
+                color: '#374151',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#3B82F6',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Welcome />} />

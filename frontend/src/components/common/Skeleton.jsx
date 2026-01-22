@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 const Skeleton = ({ className = '', variant = 'text', width, height }) => {
   const baseClasses = 'animate-pulse bg-gray-200 rounded';
 
@@ -18,8 +20,16 @@ const Skeleton = ({ className = '', variant = 'text', width, height }) => {
     <div
       className={`${baseClasses} ${variantClasses[variant] || ''} ${className}`}
       style={style}
+      aria-hidden="true"
     />
   );
+};
+
+Skeleton.propTypes = {
+  className: PropTypes.string,
+  variant: PropTypes.oneOf(['text', 'title', 'avatar', 'card', 'image']),
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };
 
 // Preset skeleton layouts
@@ -48,5 +58,9 @@ export const GalleryGridSkeleton = ({ count = 8 }) => (
     ))}
   </div>
 );
+
+GalleryGridSkeleton.propTypes = {
+  count: PropTypes.number
+};
 
 export default Skeleton;
