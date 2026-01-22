@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Logo from '../components/common/Logo';
 import LoadingButton from '../components/common/LoadingButton';
-import { painPlusAPI } from '../services/api';
+import { VisualControlsPanel, GenerationProgress, DEFAULT_OPTIONS } from '../components/generation';
+import { painPlusAPI, sessionHelpers, getErrorMessage } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import ArtSettingsModal from '../components/modals/ArtSettingsModal';
 
 const PainDescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, refreshUserSettings, updateUserSettings } = useAuth();
+  
   const [painDescription, setPainDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState('');
@@ -16,6 +20,18 @@ const PainDescription = () => {
   const [charCount, setCharCount] = useState(0);
   const [charWarning, setCharWarning] = useState(false);
   const [charLimitHit, setCharLimitHit] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [localSettings, setLocalSettings] = useState({});
+  
+  // Visual options state with defaults
+  const [visualOptions, setVisualOptions] = useState(() => {
+    // Try to restore from session storage
+    const saved = sessionHelpers.loadVisualOptions();
+    return saved || { ...DEFAULT_OPTIONS };
+  });
+
   const maxChars = 500;
   const warningThreshold = 450;
 
@@ -28,6 +44,14 @@ const PainDescription = () => {
 
   const [currentExample, setCurrentExample] = useState(0);
 
+  useEffect(() => {
+    setLocalSettings(user?.settings || {});
+  }, [user?.settings]);
+
+  // Get user's preferred model and style from settings
+  const preferredModel = localSettings?.preferredModel || 'dall-e-3';
+  const preferredStyle = localSettings?.preferredStyle || 'default';
+
   // Check if coming from Inspire page with a prefilled description
   useEffect(() => {
     if (location.state?.prefilledDescription) {
@@ -37,6 +61,11 @@ const PainDescription = () => {
       setCharWarning(prefilled.length >= warningThreshold);
     }
   }, [location.state]);
+
+  // Save visual options to session storage when they change
+  useEffect(() => {
+    sessionHelpers.saveVisualOptions(visualOptions);
+  }, [visualOptions]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,7 +92,7 @@ const PainDescription = () => {
       }
     } catch (err) {
       console.error('Error generating prompts:', err);
-      setError('Failed to generate prompts. Please try again.');
+      setError(getErrorMessage(err, 'generate prompts'));
     } finally {
       setIsLoading(false);
       setLoadingAction('');
@@ -78,25 +107,64 @@ const PainDescription = () => {
 
     setIsLoading(true);
     setLoadingAction('visualize');
+    setShowProgress(true);
     setError('');
     
     try {
-      const response = await painPlusAPI.generateImage(painDescription);
+      // Pass user's preferred settings and visual options
+      const response = await painPlusAPI.generateImage(painDescription, {
+        model: preferredModel,
+        style: preferredStyle,
+        aspectRatio: visualOptions.aspectRatio,
+        colorMood: visualOptions.colorMood,
+        detailLevel: visualOptions.detailLevel,
+      });
+      
       if (response.success) {
-        navigate('/visualize', { 
-          state: { 
-            imageUrl: response.image_url,
-            description: painDescription,
-            promptUsed: response.prompt_used
-          } 
-        });
+        // Build generation data for Visualize page
+        const generationData = {
+          imageUrl: response.image_url,
+          images: response.images || [{ url: response.image_url, model: response.model_used, style: response.style_used, promptUsed: response.prompt_used }],
+          description: painDescription,
+          promptUsed: response.prompt_used,
+          modelUsed: response.model_used,
+          styleUsed: response.style_used,
+          visualOptions,
+        };
+        
+        // Save to session storage for persistence
+        sessionHelpers.saveCurrentGeneration(generationData);
+        
+        navigate('/visualize', { state: generationData });
       }
     } catch (err) {
       console.error('Error generating image:', err);
-      setError('Failed to generate visualization. Please try again.');
+      setError(getErrorMessage(err, 'generate your visualization'));
     } finally {
       setIsLoading(false);
       setLoadingAction('');
+      setShowProgress(false);
+    }
+  };
+
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+    if (!user?.settings) {
+      refreshUserSettings();
+    }
+  };
+
+  const handleSettingsChange = async (key, value) => {
+    const nextSettings = { ...(localSettings || {}), [key]: value };
+    setLocalSettings(nextSettings);
+    setIsSavingSettings(true);
+
+    try {
+      await updateUserSettings(nextSettings);
+    } catch (err) {
+      console.error('Failed to update settings:', err);
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
@@ -107,20 +175,29 @@ const PainDescription = () => {
   };
 
   return (
-    <div className="min-h-screen watercolor-bg p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header with Logo and Back Button */}
-        <div className="card-clean mb-8 animate-fadeIn">
-          <div className="flex justify-between items-center">
-            <Logo />
-            <button
-              onClick={() => navigate('/mode')}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg
-                hover:bg-gray-200 transition-all duration-300 font-medium"
-            >
-              ← Back
-            </button>
-          </div>
+    <div className="min-h-screen watercolor-bg p-4 sm:p-8">
+      <div className="max-w-5xl w-full mx-auto">
+        {/* Minimal Header Navigation */}
+        <div className="flex justify-between items-center mb-6 animate-fadeIn">
+          <button
+            onClick={() => navigate('/mode')}
+            className="p-2 hover:bg-white/50 rounded-full transition-colors"
+            aria-label="Go back"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={handleOpenSettings}
+            className="p-2 hover:bg-white/50 rounded-full transition-colors"
+            aria-label="Settings"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
 
         {/* Main Content Card */}
@@ -136,7 +213,7 @@ const PainDescription = () => {
           </div>
 
           {/* Textarea Input */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="relative">
               <label htmlFor="pain-description" className="sr-only">
                 Describe your pain
@@ -162,7 +239,7 @@ const PainDescription = () => {
                   }
                 }}
                 placeholder={examplePrompts[currentExample]}
-                className={`w-full h-32 px-6 py-4 text-lg bg-gray-50
+                className={`w-full h-40 sm:h-44 px-6 py-4 text-lg bg-gray-50
                   border-2 rounded-xl resize-none
                   focus:outline-none focus:border-primary focus:bg-white
                   transition-all duration-300 placeholder:text-gray-400
@@ -185,7 +262,7 @@ const PainDescription = () => {
           </div>
 
           {/* Quick Prompts */}
-          <div className="mb-8">
+          <div className="mb-6">
             <p className="text-sm text-gray-600 mb-3">Need inspiration? Try these:</p>
             <div className="flex flex-wrap gap-2">
               {['Sharp pain', 'Throbbing', 'Burning sensation', 'Dull ache', 'Stabbing'].map((prompt, index) => (
@@ -204,6 +281,14 @@ const PainDescription = () => {
             </div>
           </div>
 
+          {/* Visual Controls Panel - Collapsed by default */}
+          <VisualControlsPanel
+            options={visualOptions}
+            onChange={setVisualOptions}
+            disabled={isLoading}
+            className="mb-6"
+          />
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <LoadingButton
@@ -219,7 +304,7 @@ const PainDescription = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Visualize Pain
+                Visualize
               </span>
             </LoadingButton>
 
@@ -302,6 +387,17 @@ const PainDescription = () => {
           </p>
         </div>
       </div>
+
+      <ArtSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={localSettings}
+        onSettingsChange={handleSettingsChange}
+        isSaving={isSavingSettings}
+      />
+
+      {/* Generation Progress Overlay */}
+      <GenerationProgress isVisible={showProgress} />
     </div>
   );
 };

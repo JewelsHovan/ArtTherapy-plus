@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Use Cloudflare Worker API endpoint
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://arttherapy-plus-api.julienh15.workers.dev/api';
+// API endpoint - configured via VITE_API_URL in .env
+// Fallback options:
+// - Local: http://localhost:8787/api
+// - Azure: https://arttherapy-plus-api.ambitioussand-bc135123.centralus.azurecontainerapps.io/api
+// - Cloudflare (legacy): https://arttherapy-plus-api.julienh15.workers.dev/api
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -34,6 +38,7 @@ api.interceptors.response.use(
 
       // Clear token
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_expires_at');
 
       // Don't redirect if already on auth page
       if (!isAuthPage) {
@@ -125,12 +130,19 @@ export const getErrorMessage = (error, context = 'complete this action') => {
   }
 
   const status = error.response.status;
+  const responseData = error.response.data || {};
+  const serverMessage = responseData.error || responseData.message;
+  const serverCode = responseData.code;
 
   // Client errors (4xx)
   if (status >= 400 && status < 500) {
+    if (serverCode === 'CONTENT_POLICY_VIOLATION') {
+      return serverMessage || 'Your description was flagged by our safety filters. Please rephrase and try again.';
+    }
+
     switch (status) {
       case 400:
-        return error.response.data?.message || 'Invalid request. Please check your input and try again.';
+        return serverMessage || 'Invalid request. Please check your input and try again.';
       case 401:
         return 'Your session has expired. Please log in again.';
       case 403:
@@ -140,13 +152,13 @@ export const getErrorMessage = (error, context = 'complete this action') => {
       case 429:
         return 'Too many requests. Please wait a moment and try again.';
       default:
-        return error.response.data?.message || `Unable to ${context}. Please try again.`;
+        return serverMessage || `Unable to ${context}. Please try again.`;
     }
   }
 
   // Server errors (5xx)
   if (status >= 500) {
-    return 'Our servers are experiencing issues. Please try again in a few moments.';
+    return serverMessage || 'Our servers are experiencing issues. Please try again in a few moments.';
   }
 
   // Fallback
@@ -162,8 +174,10 @@ export const painPlusAPI = {
       api.post('/auth/login', { email, password }),
     microsoftCallback: (accessToken) =>
       api.post('/auth/microsoft/callback', { access_token: accessToken }),
-    verifyToken: () =>
-      api.post('/auth/verify'),
+    verifyToken: (token) =>
+      api.post('/auth/verify', {}, token ? {
+        headers: { Authorization: `Bearer ${token}` }
+      } : undefined),
     logout: () =>
       api.post('/auth/logout')
   },
@@ -214,18 +228,47 @@ export const painPlusAPI = {
   },
 
   /**
-   * Generate image from pain description with optional model and style
+   * Generate image from pain description with optional model, style, and visual options
    * @param {string} description - Pain description to visualize
    * @param {Object} options - Optional generation settings
    * @param {string} options.model - Model ID (dall-e-3, flux-pro, gemini-image)
    * @param {string} options.style - Style preset ID
-   * @returns {Promise} - { success, image_url, prompt_used, model_used, style_used }
+   * @param {string} options.aspectRatio - Aspect ratio (1:1, 16:9, 9:16, 4:3, 3:4)
+   * @param {string} options.colorMood - Color mood (warm, neutral, cool)
+   * @param {string} options.detailLevel - Detail level (draft, balanced, max)
+   * @param {boolean} options.compareMode - Enable multi-model comparison
+   * @returns {Promise} - { success, images[], image_url, prompt_used, model_used, style_used, ... }
    */
   generateImage: async (description, options = {}) => {
     const response = await api.post('/generate/image', {
       description,
       model: options.model,
       style: options.style,
+      aspectRatio: options.aspectRatio,
+      colorMood: options.colorMood,
+      detailLevel: options.detailLevel,
+      compareMode: options.compareMode,
+    });
+    return response.data;
+  },
+
+  /**
+   * Create a variation of an existing generated image
+   * @param {string} imageUrl - URL of the image to create variation from
+   * @param {string} adjustment - Adjustment type (warmer, cooler, more_abstract, more_detailed, softer, more_intense, custom)
+   * @param {Object} options - Optional settings
+   * @param {string} options.customPrompt - Custom prompt for 'custom' adjustment
+   * @param {string} options.originalDescription - Original pain description
+   * @param {string} options.model - Model ID
+   * @returns {Promise} - { success, image_url, prompt_used, adjustment_applied, ... }
+   */
+  createVariation: async (imageUrl, adjustment, options = {}) => {
+    const response = await api.post('/generate/variation', {
+      imageUrl,
+      adjustment,
+      customPrompt: options.customPrompt,
+      originalDescription: options.originalDescription,
+      model: options.model,
     });
     return response.data;
   },
@@ -259,6 +302,86 @@ export const painPlusAPI = {
     });
     return response.data;
   }
+};
+
+// Session Storage Keys
+const SESSION_STORAGE_KEYS = {
+  CURRENT_GENERATION: 'arttherapy_current_generation',
+  VISUAL_OPTIONS: 'arttherapy_visual_options',
+};
+
+/**
+ * Session storage helpers for persisting generation state across page refreshes
+ */
+export const sessionHelpers = {
+  /**
+   * Save current generation to session storage
+   * @param {Object} generation - Generation data to save
+   */
+  saveCurrentGeneration: (generation) => {
+    try {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEYS.CURRENT_GENERATION,
+        JSON.stringify(generation)
+      );
+    } catch (error) {
+      console.warn('Failed to save generation to session storage:', error);
+    }
+  },
+
+  /**
+   * Load current generation from session storage
+   * @returns {Object|null} - Saved generation data or null
+   */
+  loadCurrentGeneration: () => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.CURRENT_GENERATION);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.warn('Failed to load generation from session storage:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Clear current generation from session storage
+   */
+  clearCurrentGeneration: () => {
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEYS.CURRENT_GENERATION);
+    } catch (error) {
+      console.warn('Failed to clear generation from session storage:', error);
+    }
+  },
+
+  /**
+   * Save visual options to session storage
+   * @param {Object} options - Visual options to save
+   */
+  saveVisualOptions: (options) => {
+    try {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEYS.VISUAL_OPTIONS,
+        JSON.stringify(options)
+      );
+    } catch (error) {
+      console.warn('Failed to save visual options to session storage:', error);
+    }
+  },
+
+  /**
+   * Load visual options from session storage
+   * @returns {Object|null} - Saved visual options or null
+   */
+  loadVisualOptions: () => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.VISUAL_OPTIONS);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.warn('Failed to load visual options from session storage:', error);
+      return null;
+    }
+  },
 };
 
 export default painPlusAPI;

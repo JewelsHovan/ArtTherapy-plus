@@ -5,6 +5,9 @@
  * Migrated from Cloudflare Workers with equivalent functionality.
  */
 
+// Load environment variables from .env file (must be first!)
+import 'dotenv/config';
+
 import express from 'express';
 import helmet from 'helmet';
 import { corsMiddleware } from './config/cors.js';

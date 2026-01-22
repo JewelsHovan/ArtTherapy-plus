@@ -7,7 +7,7 @@ React 19 SPA + Express.js/TypeScript API on Azure. Azure SQL Server, Blob Storag
 -> `docs/architecture.md`
 
 ## Authentication
-Microsoft OAuth 2.0 (PKCE) + email/password. JWT tokens (7-day expiry), PBKDF2 password hashing.
+Microsoft OAuth 2.0 (PKCE) + email/password. JWT tokens (7-day expiry, configurable via `JWT_TTL_DAYS`), PBKDF2 password hashing.
 -> `docs/authentication.md`
 
 ## Development

@@ -19,10 +19,19 @@ import { config } from '../config/index.js';
 import {
   ImageModel,
   StylePreset,
+  AspectRatio,
+  ColorMood,
+  DetailLevel,
   getModelInfo,
   getStylePrompt,
   isValidModel,
   isValidStyle,
+  isValidAspectRatio,
+  isValidColorMood,
+  isValidDetailLevel,
+  getDalleSizeForAspectRatio,
+  applyColorMoodToPrompt,
+  DETAIL_LEVEL_CONFIG,
 } from '../utils/stylePresets.js';
 
 /**
@@ -33,6 +42,11 @@ export interface GenerateImageOptions {
   model?: ImageModel;
   style?: StylePreset;
   userId: string;
+  // Enhanced Pipeline Options
+  aspectRatio?: AspectRatio;
+  colorMood?: ColorMood;
+  detailLevel?: DetailLevel;
+  compareMode?: boolean;
 }
 
 /**
@@ -40,11 +54,76 @@ export interface GenerateImageOptions {
  */
 export interface GenerateImageResult {
   success: boolean;
+  // New format: array of images (for Compare Mode support)
+  images?: GeneratedImage[];
+  // Legacy single image fields (for backward compatibility)
   imageUrl?: string;
   promptUsed?: string;
   modelUsed: ImageModel;
   styleUsed: StylePreset;
+  aspectRatioUsed?: AspectRatio;
+  colorMoodUsed?: ColorMood;
+  detailLevelUsed?: DetailLevel;
   error?: string;
+  errorCode?: string;
+  errorStatus?: number;
+}
+
+/**
+ * Individual generated image metadata
+ */
+export interface GeneratedImage {
+  url: string;
+  model: ImageModel;
+  style: StylePreset;
+  promptUsed: string;
+}
+
+interface GenerationErrorInfo {
+  message: string;
+  code?: string;
+  status?: number;
+}
+
+function getGenerationErrorInfo(error: unknown): GenerationErrorInfo {
+  if (error && typeof error === 'object') {
+    const typedError = error as {
+      message?: string;
+      code?: string;
+      status?: number;
+      type?: string;
+      error?: {
+        message?: string;
+        code?: string;
+        status?: number;
+        type?: string;
+      };
+    };
+    const message = typedError.message || typedError.error?.message || '';
+    const code = typedError.code || typedError.error?.code;
+    const status = typedError.status || typedError.error?.status;
+    const type = typedError.type || typedError.error?.type;
+    const lowerMessage = typeof message === 'string' ? message.toLowerCase() : '';
+
+    const isContentPolicyViolation =
+      code === 'content_policy_violation' ||
+      type === 'image_generation_user_error' ||
+      lowerMessage.includes('safety system') ||
+      lowerMessage.includes('content policy');
+
+    if (isContentPolicyViolation) {
+      return {
+        message:
+          'Your description was flagged by our safety filters. Please rephrase and try again.',
+        code: 'CONTENT_POLICY_VIOLATION',
+        status: 400,
+      };
+    }
+  }
+
+  return {
+    message: error instanceof Error ? error.message : 'Unknown error during image generation',
+  };
 }
 
 /**
@@ -66,14 +145,19 @@ export function getAvailableModels(): ImageModel[] {
  * Generate image using OpenAI DALL-E 3
  */
 async function generateWithOpenAI(
-  prompt: string
+  prompt: string,
+  aspectRatio: AspectRatio = '1:1',
+  detailLevel: DetailLevel = 'balanced'
 ): Promise<{ url: string; revisedPrompt: string }> {
   const openai = getOpenAIClient();
+  const size = getDalleSizeForAspectRatio(aspectRatio);
+  const quality = DETAIL_LEVEL_CONFIG[detailLevel].quality;
+
   const response = await openai.images.generate({
     model: 'dall-e-3',
     prompt,
-    size: '1024x1024',
-    quality: 'standard',
+    size,
+    quality,
     n: 1,
   });
 
@@ -186,6 +270,9 @@ export async function generateImage(
   const { description, userId } = options;
   const model = options.model || 'dall-e-3';
   const style = options.style || 'default';
+  const aspectRatio = options.aspectRatio || '1:1';
+  const colorMood = options.colorMood || 'neutral';
+  const detailLevel = options.detailLevel || 'balanced';
 
   // Validate inputs using whitelist approach
   if (!isValidModel(model)) {
@@ -206,6 +293,34 @@ export async function generateImage(
     };
   }
 
+  // Validate enhanced options
+  if (options.aspectRatio && !isValidAspectRatio(options.aspectRatio)) {
+    return {
+      success: false,
+      error: `Invalid aspect ratio: ${options.aspectRatio}. Valid ratios are: 1:1, 16:9, 9:16, 4:3, 3:4`,
+      modelUsed: model,
+      styleUsed: style,
+    };
+  }
+
+  if (options.colorMood && !isValidColorMood(options.colorMood)) {
+    return {
+      success: false,
+      error: `Invalid color mood: ${options.colorMood}. Valid moods are: warm, neutral, cool`,
+      modelUsed: model,
+      styleUsed: style,
+    };
+  }
+
+  if (options.detailLevel && !isValidDetailLevel(options.detailLevel)) {
+    return {
+      success: false,
+      error: `Invalid detail level: ${options.detailLevel}. Valid levels are: draft, balanced, max`,
+      modelUsed: model,
+      styleUsed: style,
+    };
+  }
+
   // Check if model is available based on configuration
   const availableModels = getAvailableModels();
   if (!availableModels.includes(model)) {
@@ -217,8 +332,10 @@ export async function generateImage(
     };
   }
 
-  // Generate styled prompt
-  const styledPrompt = getStylePrompt(style, description);
+  // Generate styled prompt with color mood modifier
+  let styledPrompt = getStylePrompt(style, description);
+  styledPrompt = applyColorMoodToPrompt(styledPrompt, colorMood);
+
   const modelInfo = getModelInfo(model);
   const imageKey = generateImageKey(userId, 'generated');
 
@@ -228,7 +345,7 @@ export async function generateImage(
 
     if (modelInfo?.provider === 'openai') {
       // Generate with OpenAI DALL-E 3
-      const result = await generateWithOpenAI(styledPrompt);
+      const result = await generateWithOpenAI(styledPrompt, aspectRatio, detailLevel);
       promptUsed = result.revisedPrompt;
 
       // Store the image from URL
@@ -239,6 +356,9 @@ export async function generateImage(
           prompt: promptUsed,
           model,
           style,
+          aspectRatio,
+          colorMood,
+          detailLevel,
         });
 
         if (storeResult.success) {
@@ -266,6 +386,9 @@ export async function generateImage(
             prompt: styledPrompt,
             model,
             style,
+            aspectRatio,
+            colorMood,
+            detailLevel,
           });
         } else if (result.base64) {
           // Store from base64
@@ -275,6 +398,9 @@ export async function generateImage(
             prompt: styledPrompt,
             model,
             style,
+            aspectRatio,
+            colorMood,
+            detailLevel,
           });
         } else {
           throw new Error('No image data returned from OpenRouter');
@@ -291,18 +417,35 @@ export async function generateImage(
       }
     }
 
+    // Build the generated image object
+    const generatedImage: GeneratedImage = {
+      url: imageUrl,
+      model,
+      style,
+      promptUsed,
+    };
+
     return {
       success: true,
+      // New format: images array
+      images: [generatedImage],
+      // Legacy fields for backward compatibility
       imageUrl,
       promptUsed,
       modelUsed: model,
       styleUsed: style,
+      aspectRatioUsed: aspectRatio,
+      colorMoodUsed: colorMood,
+      detailLevelUsed: detailLevel,
     };
   } catch (error) {
     console.error('Image generation error:', error);
+    const errorInfo = getGenerationErrorInfo(error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error during image generation',
+      error: errorInfo.message,
+      errorCode: errorInfo.code,
+      errorStatus: errorInfo.status,
       modelUsed: model,
       styleUsed: style,
     };

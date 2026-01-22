@@ -174,3 +174,106 @@ export function getStylePrompt(styleId: StylePreset, description: string): strin
   if (!style) return description;
   return style.promptTemplate.replace('{description}', description);
 }
+
+
+// ============================================
+// Enhanced Image Generation Pipeline Types
+// ============================================
+
+/**
+ * Available aspect ratios for image generation
+ */
+export type AspectRatio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
+
+/**
+ * Color mood options for image generation
+ */
+export type ColorMood = 'warm' | 'neutral' | 'cool';
+
+/**
+ * Detail level options for image generation
+ */
+export type DetailLevel = 'draft' | 'balanced' | 'max';
+
+/**
+ * Aspect ratio configuration with DALL-E size mapping
+ */
+export interface AspectRatioInfo {
+  id: AspectRatio;
+  label: string;
+  dalleSize: '1024x1024' | '1792x1024' | '1024x1792';
+}
+
+/**
+ * All available aspect ratios with their DALL-E size mappings
+ */
+export const ASPECT_RATIOS: AspectRatioInfo[] = [
+  { id: '1:1', label: 'Square', dalleSize: '1024x1024' },
+  { id: '16:9', label: 'Landscape', dalleSize: '1792x1024' },
+  { id: '9:16', label: 'Portrait', dalleSize: '1024x1792' },
+  { id: '4:3', label: 'Classic', dalleSize: '1024x1024' },
+  { id: '3:4', label: 'Portrait Classic', dalleSize: '1024x1792' },
+];
+
+/**
+ * Color mood modifiers to append to prompts
+ */
+export const COLOR_MOOD_MODIFIERS: Record<ColorMood, string> = {
+  warm: 'warm color palette with golden, amber, and sunset tones',
+  neutral: '',
+  cool: 'cool color palette with blue, teal, and silver tones',
+};
+
+/**
+ * Detail level quality settings
+ */
+export const DETAIL_LEVEL_CONFIG: Record<DetailLevel, { quality: 'standard' | 'hd'; description: string }> = {
+  draft: { quality: 'standard', description: 'Quick generation' },
+  balanced: { quality: 'standard', description: 'Good quality, faster' },
+  max: { quality: 'hd', description: 'Maximum detail' },
+};
+
+/**
+ * Validates if a string is a valid AspectRatio
+ */
+export function isValidAspectRatio(ratio: string): ratio is AspectRatio {
+  return ASPECT_RATIOS.some((ar) => ar.id === ratio);
+}
+
+/**
+ * Validates if a string is a valid ColorMood
+ */
+export function isValidColorMood(mood: string): mood is ColorMood {
+  return ['warm', 'neutral', 'cool'].includes(mood);
+}
+
+/**
+ * Validates if a string is a valid DetailLevel
+ */
+export function isValidDetailLevel(level: string): level is DetailLevel {
+  return ['draft', 'balanced', 'max'].includes(level);
+}
+
+/**
+ * Get aspect ratio info by ID
+ */
+export function getAspectRatioInfo(ratioId: AspectRatio): AspectRatioInfo | undefined {
+  return ASPECT_RATIOS.find((ar) => ar.id === ratioId);
+}
+
+/**
+ * Get DALL-E size for a given aspect ratio
+ */
+export function getDalleSizeForAspectRatio(ratioId: AspectRatio): '1024x1024' | '1792x1024' | '1024x1792' {
+  const info = getAspectRatioInfo(ratioId);
+  return info?.dalleSize || '1024x1024';
+}
+
+/**
+ * Apply color mood modifier to a prompt
+ */
+export function applyColorMoodToPrompt(prompt: string, mood: ColorMood): string {
+  const modifier = COLOR_MOOD_MODIFIERS[mood];
+  if (!modifier) return prompt;
+  return `${prompt}. Use a ${modifier}.`;
+}

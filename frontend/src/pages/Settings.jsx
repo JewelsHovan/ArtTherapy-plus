@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { painPlusAPI } from '../services/api';
 import ArtGenerationSettings from '../components/settings/ArtGenerationSettings';
+import { useAuth } from '../contexts/AuthContext';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { updateUserSettings } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('general');
   const [searchQuery, setSearchQuery] = useState('');
   const [settings, setSettings] = useState({ textSize: 50 });
@@ -37,7 +39,7 @@ const Settings = () => {
     setIsSaving(true);
 
     try {
-      await painPlusAPI.user.updateProfile({ settings: newSettings });
+      await updateUserSettings(newSettings);
     } catch (err) {
       console.error('Failed to save setting:', err);
       // Revert on failure

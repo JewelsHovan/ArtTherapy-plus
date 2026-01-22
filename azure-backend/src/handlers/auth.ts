@@ -111,7 +111,8 @@ export async function handleMicrosoftCallback(
     // Generate JWT
     const token = await generateJWT(
       { userId: user.id, email: user.email },
-      config.jwt.secret
+      config.jwt.secret,
+      config.jwt.ttlDays
     );
 
     res.status(200).json({
@@ -202,7 +203,8 @@ export async function handleSignup(req: Request, res: Response): Promise<void> {
     // Generate JWT token
     const token = await generateJWT(
       { userId, email: normalizedEmail },
-      config.jwt.secret
+      config.jwt.secret,
+      config.jwt.ttlDays
     );
 
     // Return success response
@@ -307,7 +309,8 @@ export async function handleLogin(req: Request, res: Response): Promise<void> {
     // Generate JWT token
     const token = await generateJWT(
       { userId: user.id, email: user.email },
-      config.jwt.secret
+      config.jwt.secret,
+      config.jwt.ttlDays
     );
 
     // Return success response

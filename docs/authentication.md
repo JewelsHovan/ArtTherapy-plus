@@ -193,7 +193,7 @@ export async function hashPassword(password) {
   userId: "uuid",
   email: "user@example.com",
   iat: 1234567890,
-  exp: 1234567890 + (7 * 24 * 60 * 60) // 7 days
+  exp: 1234567890 + (7 * 24 * 60 * 60) // 7 days (default, configurable via JWT_TTL_DAYS)
 }
 ```
 
@@ -215,6 +215,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_expires_at');
       sessionStorage.setItem('auth_redirect', window.location.pathname);
       setTimeout(() => window.location.href = '/register', 1500);
     }
@@ -250,6 +251,15 @@ export async function verifyAuth(request, env) {
 
 ```javascript
 // contexts/AuthContext.jsx
+// Helper to read JWT expiry (ms since epoch)
+const getTokenExpiry = (token) => {
+  const base64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+  if (!base64) return null;
+  const padded = base64 + '==='.slice((base64.length + 3) % 4);
+  const payload = JSON.parse(atob(padded));
+  return payload?.exp ? payload.exp * 1000 : null;
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -263,12 +273,15 @@ export function AuthProvider({ children }) {
       if (!storedToken) { setIsLoading(false); return; }
 
       try {
-        const response = await painPlusAPI.auth.verifyToken();
+        const response = await painPlusAPI.auth.verifyToken(storedToken);
         setToken(storedToken);
         setUser(response.data.user);
         setIsAuthenticated(true);
-      } catch {
-        localStorage.removeItem('auth_token');
+      } catch (error) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_expires_at');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -278,6 +291,7 @@ export function AuthProvider({ children }) {
 
   const login = (newToken, userData) => {
     localStorage.setItem('auth_token', newToken);
+    localStorage.setItem('auth_expires_at', String(getTokenExpiry(newToken)));
     setToken(newToken);
     setUser(userData);
     setIsAuthenticated(true);
@@ -285,6 +299,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_expires_at');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -311,7 +326,7 @@ export function AuthProvider({ children }) {
 - Ensure client_id is correct
 
 ### "Invalid or expired token"
-- Token has 7-day expiry
+- Token has 7-day expiry (configurable via `JWT_TTL_DAYS` in Azure backend)
 - User will be redirected to /register
 - Previous location saved in sessionStorage for redirect after login
 

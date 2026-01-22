@@ -12,6 +12,7 @@ import {
   handleReflect,
   handleInspire,
   handleEditImage,
+  handleCreateVariation,
 } from '../handlers/generate.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -33,6 +34,13 @@ router.post('/image', handleGenerateImage);
  * Body: { description: string }
  */
 router.post('/prompt', handleGeneratePrompt);
+
+/**
+ * Create a variation of an existing generated image
+ * POST /api/generate/variation
+ * Body: { imageUrl: string, adjustment: string, customPrompt?: string, originalDescription?: string, model?: string }
+ */
+router.post('/variation', handleCreateVariation);
 
 export default router;
 

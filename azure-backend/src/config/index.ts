@@ -28,6 +28,7 @@ export interface Config {
   /** JWT configuration */
   jwt: {
     secret: string;
+    ttlDays: number;
   };
   /** OpenAI configuration */
   openai: {
@@ -73,6 +74,8 @@ function loadConfig(): Config {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
+  const jwtTtlDays = parseInt(process.env.JWT_TTL_DAYS || '7', 10);
+
   return {
     server: {
       port: parseInt(process.env.PORT || '8787', 10),
@@ -89,6 +92,7 @@ function loadConfig(): Config {
     },
     jwt: {
       secret: process.env.JWT_SECRET!,
+      ttlDays: Number.isFinite(jwtTtlDays) && jwtTtlDays > 0 ? jwtTtlDays : 7,
     },
     openai: {
       apiKey: process.env.OPENAI_API_KEY!,

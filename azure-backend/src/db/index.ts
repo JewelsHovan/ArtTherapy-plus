@@ -40,6 +40,7 @@ class TediousPool {
   private connectionConfig: ReturnType<typeof parseConnectionString>;
   private connection: Connection | null = null;
   private connecting = false;
+  private requestQueue: Promise<void> = Promise.resolve();
   private queue: Array<{
     resolve: (conn: Connection) => void;
     reject: (err: Error) => void;
@@ -128,49 +129,55 @@ class TediousPool {
    * ```
    */
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const connection = await this.getConnection();
+    const run = async (): Promise<T[]> => {
+      const connection = await this.getConnection();
 
-    return new Promise((resolve, reject) => {
-      const results: T[] = [];
+      return new Promise((resolve, reject) => {
+        const results: T[] = [];
 
-      const request = new TediousRequest(sql, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results);
-        }
-      });
-
-      // Add parameters with appropriate types
-      params.forEach((param, index) => {
-        if (typeof param === 'string') {
-          request.addParameter(`p${index}`, TYPES.NVarChar, param);
-        } else if (typeof param === 'number') {
-          if (Number.isInteger(param)) {
-            request.addParameter(`p${index}`, TYPES.Int, param);
+        const request = new TediousRequest(sql, (err) => {
+          if (err) {
+            reject(err);
           } else {
-            request.addParameter(`p${index}`, TYPES.Float, param);
+            resolve(results);
           }
-        } else if (param instanceof Date) {
-          request.addParameter(`p${index}`, TYPES.DateTime, param);
-        } else if (param === null || param === undefined) {
-          request.addParameter(`p${index}`, TYPES.NVarChar, null);
-        } else {
-          // For objects/arrays, stringify as JSON
-          request.addParameter(`p${index}`, TYPES.NVarChar, JSON.stringify(param));
-        }
-      });
-
-      request.on('row', (columns: Array<{ metadata: { colName: string }; value: unknown }>) => {
-        const row: Record<string, unknown> = {};
-        columns.forEach((column: { metadata: { colName: string }; value: unknown }) => {
-          row[column.metadata.colName] = column.value;
         });
-        results.push(row as T);
-      });
 
-      connection.execSql(request);
-    });
+        // Add parameters with appropriate types
+        params.forEach((param, index) => {
+          if (typeof param === 'string') {
+            request.addParameter(`p${index}`, TYPES.NVarChar, param);
+          } else if (typeof param === 'number') {
+            if (Number.isInteger(param)) {
+              request.addParameter(`p${index}`, TYPES.Int, param);
+            } else {
+              request.addParameter(`p${index}`, TYPES.Float, param);
+            }
+          } else if (param instanceof Date) {
+            request.addParameter(`p${index}`, TYPES.DateTime, param);
+          } else if (param === null || param === undefined) {
+            request.addParameter(`p${index}`, TYPES.NVarChar, null);
+          } else {
+            // For objects/arrays, stringify as JSON
+            request.addParameter(`p${index}`, TYPES.NVarChar, JSON.stringify(param));
+          }
+        });
+
+        request.on('row', (columns: Array<{ metadata: { colName: string }; value: unknown }>) => {
+          const row: Record<string, unknown> = {};
+          columns.forEach((column: { metadata: { colName: string }; value: unknown }) => {
+            row[column.metadata.colName] = column.value;
+          });
+          results.push(row as T);
+        });
+
+        connection.execSql(request);
+      });
+    };
+
+    const queued = this.requestQueue.then(run, run);
+    this.requestQueue = queued.then(() => undefined, () => undefined);
+    return queued;
   }
 
   /**

@@ -23,16 +23,18 @@ export interface TokenPayload extends JWTPayload {
  *
  * @param payload - Data to encode in token (userId, email)
  * @param secret - Secret key for signing
+ * @param ttlDays - Token lifetime in days
  * @returns JWT token string
  *
  * @example
  * ```typescript
- * const token = await generateJWT({ userId: '123', email: 'user@example.com' }, 'secret');
+ * const token = await generateJWT({ userId: '123', email: 'user@example.com' }, 'secret', 7);
  * ```
  */
 export async function generateJWT(
   payload: { userId: string; email: string },
-  secret: string
+  secret: string,
+  ttlDays = 7
 ): Promise<string> {
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(secret);
@@ -40,7 +42,7 @@ export async function generateJWT(
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('24h')
+    .setExpirationTime(`${ttlDays}d`)
     .sign(secretKey);
 }
 

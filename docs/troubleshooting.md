@@ -16,7 +16,7 @@
 - Clear sessionStorage and try again
 
 #### "Invalid or expired token"
-- Token has 7-day expiry
+- Token has 7-day expiry (configurable via `JWT_TTL_DAYS`)
 - User will be redirected to /register
 - Previous location saved in sessionStorage for redirect after login
 
@@ -27,7 +27,8 @@
 
 #### 401 on API calls
 - Check if token exists in localStorage (`auth_token`)
-- Verify token hasn't expired (7 days)
+- Check token expiry in localStorage (`auth_expires_at`)
+- Verify token hasn't expired (7 days by default)
 - Check network tab for actual error response
 - Try logging out and back in
 

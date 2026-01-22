@@ -19,6 +19,41 @@ import { config } from '../config/index.js';
 let blobServiceClient: BlobServiceClient | null = null;
 let containerClient: ContainerClient | null = null;
 
+const MAX_METADATA_VALUE_LENGTH = 2000;
+
+function sanitizeMetadataValue(value: string): string {
+  let cleaned = String(value);
+  cleaned = cleaned.replace(/[\r\n\t]+/g, ' ');
+  cleaned = cleaned.replace(/[\u0000-\u001f\u007f]/g, '');
+  cleaned = cleaned.replace(/[^\x20-\x7E]/g, '?');
+  cleaned = cleaned.trim();
+
+  if (cleaned.length > MAX_METADATA_VALUE_LENGTH) {
+    cleaned = cleaned.slice(0, MAX_METADATA_VALUE_LENGTH);
+  }
+
+  return cleaned;
+}
+
+function sanitizeMetadata(metadata: Record<string, string>): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+
+    const cleaned = sanitizeMetadataValue(value);
+    if (cleaned.length === 0) {
+      continue;
+    }
+
+    sanitized[key] = cleaned;
+  }
+
+  return sanitized;
+}
+
 /**
  * Get the Azure Blob Storage container client
  * Lazily initializes the client on first call
@@ -115,15 +150,17 @@ export async function storeImageFromUrl(
     const blobClient: BlockBlobClient = container.getBlockBlobClient(key);
 
     // Upload to Azure Blob Storage with metadata
+    const sanitizedMetadata = sanitizeMetadata({
+      ...metadata,
+      storedAt: new Date().toISOString(),
+    });
+
     await blobClient.uploadData(Buffer.from(imageData), {
       blobHTTPHeaders: {
         blobContentType: contentType,
         blobCacheControl: 'public, max-age=31536000', // Cache for 1 year
       },
-      metadata: {
-        ...metadata,
-        storedAt: new Date().toISOString(),
-      },
+      metadata: sanitizedMetadata,
     });
 
     return {
@@ -190,15 +227,17 @@ export async function storeImageFromBase64(
     const blobClient = container.getBlockBlobClient(key);
 
     // Upload to Azure Blob Storage with metadata
+    const sanitizedMetadata = sanitizeMetadata({
+      ...metadata,
+      storedAt: new Date().toISOString(),
+    });
+
     await blobClient.uploadData(buffer, {
       blobHTTPHeaders: {
         blobContentType: contentType,
         blobCacheControl: 'public, max-age=31536000', // Cache for 1 year
       },
-      metadata: {
-        ...metadata,
-        storedAt: new Date().toISOString(),
-      },
+      metadata: sanitizedMetadata,
     });
 
     return {
@@ -253,15 +292,17 @@ export async function storeImageFromBuffer(
     const blobClient = container.getBlockBlobClient(key);
 
     // Upload to Azure Blob Storage with metadata
+    const sanitizedMetadata = sanitizeMetadata({
+      ...metadata,
+      storedAt: new Date().toISOString(),
+    });
+
     await blobClient.uploadData(buffer, {
       blobHTTPHeaders: {
         blobContentType: contentType,
         blobCacheControl: 'public, max-age=31536000', // Cache for 1 year
       },
-      metadata: {
-        ...metadata,
-        storedAt: new Date().toISOString(),
-      },
+      metadata: sanitizedMetadata,
     });
 
     return {
