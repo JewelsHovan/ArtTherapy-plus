@@ -12,7 +12,7 @@ const EmptyState = ({
   return (
     <div className={`text-center ${isCompact ? 'py-8' : 'py-16'}`}>
       {icon && (
-        <div className={`mx-auto ${isCompact ? 'mb-4 w-16 h-16' : 'mb-8 w-32 h-32'} bg-gradient-to-br from-blue-100 to-orange-100 rounded-full flex items-center justify-center`}>
+        <div className={`mx-auto ${isCompact ? 'mb-4 w-16 h-16' : 'mb-8 w-32 h-32'} bg-gradient-to-br from-primary-light to-secondary-light rounded-full flex items-center justify-center`}>
           {icon}
         </div>
       )}

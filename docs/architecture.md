@@ -74,7 +74,7 @@ frontend/
 
 ### Technology Stack
 - Express.js 4.x with TypeScript
-- Drizzle ORM for database operations
+- Raw SQL queries via tedious driver
 - Azure SQL Server (tedious driver)
 - Azure Blob Storage (@azure/storage-blob)
 - OpenAI SDK 4.x for AI integration
@@ -115,7 +115,7 @@ azure-backend/
       password.ts     # PBKDF2 hashing
     db/
       index.ts        # Database connection pool
-      schema.ts       # Drizzle schema definitions
+      schema.ts       # TypeScript type definitions
   Dockerfile          # Multi-stage build for production
   tsconfig.json       # TypeScript configuration
 ```

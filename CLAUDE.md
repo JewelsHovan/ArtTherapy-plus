@@ -13,7 +13,7 @@ React 19 SPA (Azure SWA) + Express.js/TypeScript API (Azure Container Apps). Azu
 
 ## Tech Stack
 Frontend: React 19, Vite 7, React Router 7, Tailwind CSS 3, Axios, react-hot-toast
-Backend: Express.js, TypeScript, Drizzle ORM, Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SDK
+Backend: Express.js, TypeScript, tedious (raw SQL), Azure SQL Server, Azure Blob Storage, jose (JWT), OpenAI SDK
 
 ## Commands
 | Task | Command |

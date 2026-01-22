@@ -80,7 +80,7 @@ const Gallery = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="card-clean mb-8 animate-fadeIn">
             <Skeleton variant="title" width="40%" className="mb-2" />
@@ -94,7 +94,7 @@ const Gallery = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
         <ErrorMessage message={error} onRetry={loadGallery} variant="page" />
       </div>
     );
@@ -108,7 +108,7 @@ const Gallery = () => {
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <PageHeader

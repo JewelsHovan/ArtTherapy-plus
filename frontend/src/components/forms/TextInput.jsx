@@ -35,7 +35,7 @@ const TextInput = ({
         placeholder={placeholder}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={errorId}
-        className={`${widthStyles} px-6 py-4 text-lg bg-white text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
+        className={`${widthStyles} px-6 py-4 text-lg bg-cream-100 text-gray-800 placeholder-gray-400 rounded-lg border-2 ${
           error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-primary focus:ring-primary focus:border-transparent'
         } outline-none focus:ring-2 transition-all shadow-md focus:shadow-lg ${className}`}
         {...props}

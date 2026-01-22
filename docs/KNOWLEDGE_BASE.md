@@ -27,7 +27,7 @@ Common errors, CORS issues, database connectivity, debugging tips.
 -> `docs/troubleshooting.md`
 
 ## Database Schema
-Azure SQL Server: users, gallery_items, journal_entries tables. Drizzle ORM.
+Azure SQL Server: users, gallery_items, journal_entries tables. Raw SQL via tedious.
 -> `azure-backend/src/db/schema.ts`
 
 ## Frontend Structure
@@ -48,7 +48,7 @@ Azure SQL Server: users, gallery_items, journal_entries tables. Drizzle ORM.
 | `azure-backend/src/handlers/` | Business logic (auth, gallery, generate, journal, user) |
 | `azure-backend/src/middleware/` | Auth verification, error handling, rate limiting |
 | `azure-backend/src/services/` | OpenAI, Azure Storage integrations |
-| `azure-backend/src/db/` | Database connection, Drizzle schema |
+| `azure-backend/src/db/` | Database connection pool, TypeScript types |
 
 ## Scripts
 

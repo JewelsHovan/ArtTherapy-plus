@@ -91,10 +91,8 @@ npm run dev          # Local development with tsx watch
 npm run build        # Compile TypeScript to dist/
 npm run start        # Run compiled code
 npm run lint         # ESLint check
-npm run db:generate  # Generate Drizzle migrations
-npm run db:migrate   # Run migrations
-npm run db:push      # Push schema to database
-npm run db:studio    # Open Drizzle Studio
+# Note: drizzle-kit commands are in package.json but not actively used
+# Database uses raw SQL via tedious driver instead
 ```
 
 ### Environment Variables
@@ -303,7 +301,7 @@ const response = await painPlusAPI.gallery.getAll();
 ## Useful Links
 
 - [Express.js Documentation](https://expressjs.com/)
-- [Drizzle ORM Docs](https://orm.drizzle.team/)
+- [Tedious (Azure SQL Driver)](https://tediousjs.github.io/tedious/)
 - [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/)
 - [Vite Documentation](https://vitejs.dev/)
 - [React Router v7](https://reactrouter.com/)

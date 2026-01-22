@@ -37,7 +37,7 @@ const Logo = ({ size = 'default', showText = false }) => {
         className={`${sizeClasses[size]} object-cover rounded-md group-hover:scale-105 transition-transform duration-300`}
       />
       {showText && (
-        <span className="text-xl font-bold">
+        <span className="text-xl font-bold font-display">
           <span className="text-secondary">p</span>
           <span className="text-primary">ain</span>
           <span className="text-secondary">+</span>

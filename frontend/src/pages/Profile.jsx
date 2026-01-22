@@ -436,7 +436,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500 truncate">{profile?.email}</p>
                   <div className="flex items-center gap-4 mt-1">
                     <span className="text-sm text-gray-600 flex items-center gap-1">
-                      <span className="text-blue-500">&#10003;</span> Verified
+                      <span className="text-primary">&#10003;</span> Verified
                     </span>
                   </div>
                 </>

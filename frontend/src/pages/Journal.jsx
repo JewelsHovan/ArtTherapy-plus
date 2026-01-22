@@ -47,7 +47,7 @@ const Journal = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="card-clean mb-8 animate-fadeIn">
             <div className="flex justify-between items-center">
@@ -70,7 +70,7 @@ const Journal = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
         <ErrorMessage message={error} onRetry={loadJournal} variant="page" />
       </div>
     );
@@ -93,7 +93,7 @@ const Journal = () => {
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen watercolor-bg p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <PageHeader

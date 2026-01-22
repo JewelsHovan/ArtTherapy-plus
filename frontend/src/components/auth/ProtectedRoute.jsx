@@ -32,7 +32,7 @@ export default function ProtectedRoute() {
   // Show branded loading experience while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center watercolor-bg">
         <div className="text-center">
           <div className="animate-pulse mx-auto mb-6">
             <Logo size="large" showText={false} />

@@ -13,13 +13,13 @@ const Welcome = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 watercolor-bg">
       <div className="card-clean max-w-xl w-full animate-fadeIn text-center py-12">
         <div className="mb-12">
           <Logo />
         </div>
         
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+        <h1 className="text-3xl font-display font-bold text-gray-800 mb-4">
           Transform Pain Into Power
         </h1>
         <p className="text-gray-600 text-lg mb-10 max-w-md mx-auto">

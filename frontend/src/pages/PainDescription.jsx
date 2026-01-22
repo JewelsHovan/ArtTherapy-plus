@@ -107,7 +107,7 @@ const PainDescription = () => {
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen watercolor-bg p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header with Logo and Back Button */}
         <div className="card-clean mb-8 animate-fadeIn">
@@ -124,7 +124,7 @@ const PainDescription = () => {
         </div>
 
         {/* Main Content Card */}
-        <div className="card-clean animate-fadeIn" style={{ animationDelay: '150ms' }}>
+        <div className="card-clean gradient-border animate-fadeIn" style={{ animationDelay: '150ms' }}>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">
               Describe Your Pain
@@ -188,12 +188,15 @@ const PainDescription = () => {
           <div className="mb-8">
             <p className="text-sm text-gray-600 mb-3">Need inspiration? Try these:</p>
             <div className="flex flex-wrap gap-2">
-              {['Sharp pain', 'Throbbing', 'Burning sensation', 'Dull ache', 'Stabbing'].map((prompt) => (
+              {['Sharp pain', 'Throbbing', 'Burning sensation', 'Dull ache', 'Stabbing'].map((prompt, index) => (
                 <button
                   key={prompt}
                   onClick={() => handleQuickPrompt(prompt)}
-                  className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-full
-                    hover:bg-blue-100 transition-all duration-300"
+                  className={`quick-tag ${
+                    index % 3 === 0 ? 'quick-tag-primary' :
+                    index % 3 === 1 ? 'quick-tag-secondary' :
+                    'quick-tag-accent'
+                  }`}
                 >
                   {prompt}
                 </button>
@@ -209,7 +212,7 @@ const PainDescription = () => {
               loadingText="Creating Art..."
               disabled={!painDescription.trim()}
               variant="primary"
-              className="px-8 py-3 rounded-xl font-semibold text-lg min-w-[200px] transform hover:-translate-y-1 disabled:transform-none"
+              className="px-8 py-3 rounded-xl font-semibold text-lg min-w-[200px] transform hover:-translate-y-1 disabled:transform-none bg-gradient-to-r from-primary to-primary-hover"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,9 +260,9 @@ const PainDescription = () => {
             <h3 className="text-2xl font-bold text-gray-800 mb-6">Creative Prompts for You</h3>
             <div className="space-y-4">
               {prompts.map((prompt, index) => (
-                <div 
-                  key={index} 
-                  className="bg-gradient-to-r from-blue-50 to-orange-50 p-5 rounded-xl
+                <div
+                  key={index}
+                  className="bg-gradient-to-r from-primary-light/50 to-secondary-light/50 p-5 rounded-xl
                     border border-gray-200 hover:shadow-md transition-all duration-300
                     transform hover:-translate-y-1"
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -267,12 +270,12 @@ const PainDescription = () => {
                   <p className="font-medium text-gray-800 text-lg mb-3">{prompt.prompt}</p>
                   <div className="flex flex-wrap gap-4 text-sm">
                     {prompt.technique && (
-                      <span className="px-3 py-1 bg-white/70 rounded-full text-blue-700">
+                      <span className="px-3 py-1 bg-white/70 rounded-full text-primary">
                         <span className="font-semibold">Technique:</span> {prompt.technique}
                       </span>
                     )}
                     {prompt.emotional_focus && (
-                      <span className="px-3 py-1 bg-white/70 rounded-full text-orange-700">
+                      <span className="px-3 py-1 bg-white/70 rounded-full text-secondary-dark">
                         <span className="font-semibold">Focus:</span> {prompt.emotional_focus}
                       </span>
                     )}

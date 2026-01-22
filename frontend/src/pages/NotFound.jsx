@@ -6,7 +6,7 @@ const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center watercolor-bg p-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
           <Logo className="mx-auto" />

@@ -77,8 +77,8 @@ const ArtGenerationSettings = ({ settings, onSettingsChange, isSaving }) => {
   // Cost tier badge colors
   const costTierColors = {
     low: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    high: 'bg-orange-100 text-orange-800',
+    medium: 'bg-accent-light text-amber-800',
+    high: 'bg-secondary-light text-secondary-dark',
   };
 
   if (isLoading) {
@@ -104,7 +104,7 @@ const ArtGenerationSettings = ({ settings, onSettingsChange, isSaving }) => {
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 text-sm text-blue-600 hover:underline"
+            className="mt-2 text-sm text-primary hover:underline"
           >
             Retry
           </button>
@@ -132,7 +132,7 @@ const ArtGenerationSettings = ({ settings, onSettingsChange, isSaving }) => {
               onClick={() => handleModelChange(model.id)}
               className={`p-4 rounded-lg border-2 text-left transition-all ${
                 selectedModel === model.id
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-primary bg-primary-light'
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -144,7 +144,7 @@ const ArtGenerationSettings = ({ settings, onSettingsChange, isSaving }) => {
               </div>
               <p className="text-sm text-gray-600">{model.description}</p>
               {selectedModel === model.id && (
-                <div className="mt-2 flex items-center text-blue-600 text-sm">
+                <div className="mt-2 flex items-center text-primary text-sm">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -183,14 +183,14 @@ const ArtGenerationSettings = ({ settings, onSettingsChange, isSaving }) => {
               onClick={() => handleStyleChange(style.id)}
               className={`p-3 rounded-lg border-2 text-left transition-all ${
                 selectedStyle === style.id
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-primary bg-primary-light'
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium text-sm">{style.name}</span>
                 {selectedStyle === style.id && (
-                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

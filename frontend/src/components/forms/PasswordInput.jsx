@@ -26,7 +26,7 @@ const PasswordInput = ({
 
     if (strength <= 2) return { level: 1, label: 'Weak', color: 'bg-red-500' };
     if (strength === 3) return { level: 2, label: 'Fair', color: 'bg-yellow-500' };
-    if (strength === 4) return { level: 3, label: 'Good', color: 'bg-blue-500' };
+    if (strength === 4) return { level: 3, label: 'Good', color: 'bg-primary' };
     return { level: 4, label: 'Strong', color: 'bg-green-500' };
   };
 
@@ -78,7 +78,7 @@ const PasswordInput = ({
             <span className={`text-xs font-medium ${
               strength.level === 1 ? 'text-red-600' :
               strength.level === 2 ? 'text-yellow-600' :
-              strength.level === 3 ? 'text-blue-600' :
+              strength.level === 3 ? 'text-primary' :
               'text-green-600'
             }`}>
               {strength.label}

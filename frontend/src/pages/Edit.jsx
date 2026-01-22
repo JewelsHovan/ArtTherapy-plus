@@ -122,7 +122,7 @@ const Edit = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8">
+    <div className="min-h-screen watercolor-bg py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
@@ -164,7 +164,7 @@ const Edit = () => {
             >
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2
-                ${step >= 1 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
+                ${step >= 1 ? "border-primary bg-primary-light" : "border-gray-300 bg-white"}`}
               >
                 1
               </div>
@@ -180,7 +180,7 @@ const Edit = () => {
             >
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2
-                ${step >= 2 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
+                ${step >= 2 ? "border-primary bg-primary-light" : "border-gray-300 bg-white"}`}
               >
                 2
               </div>
@@ -196,7 +196,7 @@ const Edit = () => {
             >
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2
-                ${step >= 3 ? "border-primary bg-blue-100" : "border-gray-300 bg-white"}`}
+                ${step >= 3 ? "border-primary bg-primary-light" : "border-gray-300 bg-white"}`}
               >
                 3
               </div>

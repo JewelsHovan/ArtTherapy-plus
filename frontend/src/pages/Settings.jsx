@@ -102,7 +102,7 @@ const Settings = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen watercolor-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Loading settings...</p>
@@ -112,7 +112,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:flex">
+    <div className="min-h-screen watercolor-bg lg:flex">
       {/* Mobile header */}
       <div className="lg:hidden bg-white border-b border-gray-200 p-4">
         <h1 className="text-xl font-bold">Settings</h1>
@@ -160,7 +160,7 @@ const Settings = () => {
               </div>
               <button 
                 onClick={() => navigate('/profile')}
-                className="text-blue-600 hover:underline text-sm"
+                className="text-primary hover:underline text-sm"
               >
                 Edit profile
               </button>

@@ -81,7 +81,7 @@ const Reflect = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8">
+      <div className="min-h-screen watercolor-bg p-8">
         <div className="max-w-5xl mx-auto">
           {/* Header skeleton */}
           <div className="card-clean mb-8">
@@ -135,7 +135,7 @@ const Reflect = () => {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen watercolor-bg p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="card-clean mb-8 animate-fadeIn">

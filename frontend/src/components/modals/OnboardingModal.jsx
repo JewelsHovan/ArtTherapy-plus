@@ -112,7 +112,7 @@ const OnboardingModal = ({ isOpen, onClose }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="onboarding-title"
-        className={`relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transition-transform duration-300 ${
+        className={`relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transition-transform duration-300 ${
           isClosing ? 'scale-95' : 'scale-100'
         }`}
       >
@@ -123,7 +123,7 @@ const OnboardingModal = ({ isOpen, onClose }) => {
           {/* Title */}
           <h2
             id="onboarding-title"
-            className="text-2xl font-bold text-gray-800 mb-4"
+            className="text-2xl font-display font-bold text-gray-800 mb-4"
           >
             {step.title}
           </h2>

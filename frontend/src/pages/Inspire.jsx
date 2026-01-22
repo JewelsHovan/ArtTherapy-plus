@@ -51,7 +51,7 @@ const Inspire = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8">
+      <div className="min-h-screen watercolor-bg p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header Skeleton */}
           <div className="card-clean mb-8">
@@ -90,7 +90,7 @@ const Inspire = () => {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen watercolor-bg p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="card-clean mb-8 animate-fadeIn">

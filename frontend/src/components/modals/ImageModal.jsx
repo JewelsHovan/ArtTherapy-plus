@@ -101,7 +101,7 @@ const ImageModal = ({ isOpen, onClose, imageData }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative w-[90vw] h-[90vh] max-w-7xl bg-white rounded-lg shadow-2xl overflow-hidden transition-transform duration-300 flex flex-col ${isClosing ? 'scale-95' : 'scale-100'}`}
+        className={`relative w-[90vw] h-[90vh] max-w-7xl bg-white rounded-2xl shadow-2xl overflow-hidden transition-transform duration-300 flex flex-col ${isClosing ? 'scale-95' : 'scale-100'}`}
       >
         <button
           ref={closeButtonRef}
@@ -150,7 +150,7 @@ const ImageModal = ({ isOpen, onClose, imageData }) => {
           </div>
 
           {showImage && imageData.promptUsed && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg max-w-4xl mx-auto w-full">
+            <div className="mt-6 p-4 bg-cream-100 rounded-xl max-w-4xl mx-auto w-full">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">Artistic Interpretation:</h3>
               <p className="text-sm text-gray-600 italic">{imageData.promptUsed}</p>
             </div>

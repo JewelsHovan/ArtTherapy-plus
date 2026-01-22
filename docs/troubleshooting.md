@@ -208,12 +208,11 @@ app.use((req, res, next) => {
 
 ### Database
 ```bash
-# Test connection
-cd azure-backend
-npm run db:studio  # Opens Drizzle Studio
-
-# View query logs (add to config)
+# View query logs
 # Set DEBUG=tedious* environment variable
+
+# Database uses raw SQL via tedious driver
+# Check connection in azure-backend/src/db/index.ts
 ```
 
 ## Getting Help
