@@ -1,123 +1,91 @@
-# CLAUDE.md
+# ArtTherapy+
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Art therapy web app for pain management through AI-powered creative expression.
 
-## Project Overview
-Pain+ Art Therapy Web Application - A full-stack application for art therapy focusing on pain management through creative expression using AI-powered image generation (DALL-E 3) and reflection tools.
+## Quick Context
+Full-stack SPA: React 19 frontend (Azure SWA) + Cloudflare Workers API (D1/R2). Uses OpenAI (DALL-E 3, GPT-4o-mini) for image generation and reflection. Microsoft OAuth (PKCE) + email/password auth.
 
-## Tech Stack & Architecture
+## Tech Stack
+Frontend: React 19, Vite 7, React Router 7, Tailwind CSS 3, Axios
+Backend: Cloudflare Workers, D1 (SQLite), R2 (images), jose (JWT), OpenAI SDK
 
-### Backend (Flask API - Port 5000)
-- **Framework**: Flask with Flask-CORS
-- **AI Integration**: OpenAI API (GPT-4o-mini for prompts/reflection, DALL-E 3 for images)
-- **API Endpoints**:
-  - `/api/health` - Health check
-  - `/api/generate/image` - Generate art from pain descriptions
-  - `/api/generate/prompt` - Generate creative prompts
-  - `/api/reflect` - Generate reflection questions
-  - `/api/inspire` - Get inspirational prompts
-- **Environment**: Requires `OPENAI_API_KEY` in `.env` file
+## Commands
+| Task | Command |
+|------|---------|
+| Dev (both) | `./start.sh` |
+| Frontend | `cd frontend && npm run dev` |
+| Backend | `cd cloudflare-worker && npx wrangler dev` |
+| Build | `cd frontend && npm run build` |
+| Lint | `cd frontend && npm run lint` |
+| Deploy API | `cd cloudflare-worker && npm run deploy` |
+| D1 Query | `npx wrangler d1 execute arttherapy-plus-db --remote --command "SQL"` |
 
-### Frontend (React + Vite - Port 5173)
-- **Build Tool**: Vite with React template
-- **Routing**: React Router v7
-- **Styling**: Tailwind CSS with custom theme colors
-- **HTTP Client**: Axios with proxy to backend
-- **Component Structure**: Bottom-up approach with showcase route
+## Ports
+Frontend: 5173 | Backend (wrangler): 8787
 
-## Essential Commands
+## Key Patterns
 
-### Development
-```bash
-# Run both servers simultaneously
-./start.sh
+### Authentication
+- Microsoft OAuth uses PKCE (frontend token exchange at `/oauth-callback.html`)
+- JWT tokens stored in localStorage (`auth_token`), 7-day expiry
+- AuthContext provides: `user`, `token`, `isAuthenticated`, `isLoading`, `login`, `logout`
 
-# Or run separately:
-# Backend
-cd backend && python app.py
+### API Calls
+- All calls via `painPlusAPI` object in `frontend/src/services/api.js`
+- Bearer token auto-attached by axios interceptor
+- 401 responses trigger redirect to `/register`
 
-# Frontend  
-cd frontend && npm run dev
+### Protected Routes
+Wrap with `<ProtectedRoute />` in App.jsx, renders inside `<AppLayout />`
+
+### Component Structure
+- `components/common/` - Button, Logo, Skeleton, ErrorBoundary
+- `components/forms/` - TextInput, PasswordInput
+- `components/layout/` - AppLayout, Header
+- `pages/` - Route components
+
+## Theme Colors
+Primary: `#3B82F6` (blue) | Secondary: `#F59E0B` (amber/orange)
+
+## API Endpoints (Protected)
+| Endpoint | Purpose |
+|----------|---------|
+| POST /api/generate/image | DALL-E 3 art from pain description |
+| POST /api/edit/image | Vision analysis + style transfer |
+| POST /api/reflect | GPT reflection questions |
+| GET/POST /api/gallery | User artwork storage |
+| GET/POST /api/journal | Reflection entries |
+| GET/PUT /api/user/profile | Profile management |
+
+## Environment Variables
+
+### Frontend (.env)
+```
+VITE_API_URL=https://arttherapy-plus-api.julienh15.workers.dev/api
+VITE_MICROSOFT_CLIENT_ID=1068db0a-2e86-4094-aa91-b55bca8ac09a
 ```
 
-### Frontend Commands
-```bash
-npm run dev      # Start dev server (port 5173)
-npm run build    # Production build
-npm run lint     # Run ESLint checks
-npm run preview  # Preview production build
+### Backend Secrets (wrangler secret put)
+```
+OPENAI_API_KEY, JWT_SECRET, MICROSOFT_CLIENT_SECRET
 ```
 
-### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-# Create .env file with OPENAI_API_KEY
-python app.py
-```
+## Critical Files
+| File | Purpose |
+|------|---------|
+| `frontend/src/App.jsx` | Routes, AuthProvider |
+| `frontend/src/contexts/AuthContext.jsx` | Auth state |
+| `frontend/src/services/api.js` | API client |
+| `frontend/src/pages/Registration.jsx` | OAuth PKCE flow |
+| `cloudflare-worker/src/index.js` | API router |
+| `cloudflare-worker/src/handlers/auth.js` | Auth handlers |
+| `cloudflare-worker/wrangler.toml` | D1/R2 config |
 
-## Key Development Patterns
+## Before Committing
+1. `npm run lint` - No ESLint errors
+2. `npm run build` - Build succeeds
+3. Test auth flow (login/logout)
+4. Check CORS if adding new origins
 
-### Frontend Component Architecture
-- **Bottom-up Development**: Build atomic components first, then compose
-- **Component Showcase**: `/componentshowcase` route for isolated testing
-- **Folder Structure**:
-  - `components/common/` - Reusable UI (Button, Logo, etc.)
-  - `components/forms/` - Form components (TextInput, etc.)
-  - `pages/` - Route-level components
-  - `services/` - API integration layer
-
-### API Communication
-- Frontend proxy configured in `vite.config.js` to route `/api/*` to backend
-- CORS configured for localhost:5173 and localhost:3000
-- All API calls use `/api/` prefix for automatic proxying
-
-### Routing Structure
-```javascript
-/ - Welcome page
-/register - User registration
-/mode - Mode selection (Create/Inspire)
-/describe - Pain description input
-/visualize - Art generation and display
-/componentshowcase - Component development
-/settings - User settings
-/profile - User profile
-```
-
-### Figma Design References
-- **Page Components**: https://www.figma.com/design/pk8kgMgrhMjWSUD5lI8sVk/MT2-Wireframe?node-id=1142-4103&m=dev
-- **Component Library**: https://www.figma.com/design/pk8kgMgrhMjWSUD5lI8sVk/MT2-Wireframe?node-id=1104-1863&m=dev
-
-## Critical Implementation Notes
-
-### State Management Flow
-1. User selects mode (Create/Inspire) → stored in component state
-2. Pain description → sent to backend → generates image/prompts
-3. Generated content → displayed with reflection questions
-4. All API responses include original context for continuity
-
-### Error Handling
-- Backend returns structured JSON errors with status codes
-- Frontend should handle loading states and API errors gracefully
-- CORS preflight handled with OPTIONS endpoints
-
-### Security Considerations
-- Never commit `.env` file with API keys
-- OPENAI_API_KEY required for backend functionality
-- Proxy configuration prevents direct API exposure
-
-## Testing & Quality Checks
-
-Before any commit:
-1. Ensure `npm run lint` passes (ESLint configured)
-2. Verify `npm run build` succeeds
-3. Test CORS with included `test-cors.html`
-4. Check component showcase for visual regression
-5. Verify API endpoints return expected responses
-
-## MCP Server Integration
-When using MCP servers for development:
-- **Figma Dev Mode**: Extract designs and variables
-- **Puppeteer**: Visual testing and screenshots
-- **Context7**: React documentation lookup
-- **Sequential Thinking**: Complex task planning
+## Documentation
+Index: `docs/KNOWLEDGE_BASE.md`

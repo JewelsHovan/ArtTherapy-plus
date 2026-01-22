@@ -1,0 +1,441 @@
+#!/bin/bash
+#
+# ArtTherapy+ Azure SQL Data Import
+#
+# This script imports data exported from Cloudflare D1 into Azure SQL.
+# It handles the JSON to SQL conversion and maintains referential integrity.
+#
+# Prerequisites:
+#   - Node.js installed (for JSON processing)
+#   - sqlcmd installed (Azure SQL tools)
+#   - Data exported via ./scripts/export-d1-data.sh
+#   - Azure SQL schema initialized via 001_init_schema.sql
+#
+# Usage:
+#   ./scripts/import-azure-data.sh
+#
+# Or with environment variables:
+#   SQL_SERVER=xxx SQL_DATABASE=yyy SQL_USER=zzz SQL_PASSWORD=ppp ./scripts/import-azure-data.sh
+#
+
+set -euo pipefail
+
+#==============================================================================
+# Configuration
+#==============================================================================
+EXPORT_DIR="exports"
+IMPORT_DIR="exports/sql"
+
+#==============================================================================
+# Helper Functions
+#==============================================================================
+log_info() {
+    echo -e "\033[0;34m[INFO]\033[0m $1"
+}
+
+log_success() {
+    echo -e "\033[0;32m[SUCCESS]\033[0m $1"
+}
+
+log_warn() {
+    echo -e "\033[0;33m[WARNING]\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[0;31m[ERROR]\033[0m $1"
+}
+
+escape_sql_string() {
+    # Escape single quotes for SQL
+    echo "$1" | sed "s/'/''/g"
+}
+
+#==============================================================================
+# Load Configuration
+#==============================================================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/.azure-config"
+
+# Try to load from config file if exists
+if [ -f "$CONFIG_FILE" ]; then
+    log_info "Loading configuration from $CONFIG_FILE"
+    source "$CONFIG_FILE"
+    SQL_SERVER="${SQL_SERVER_FQDN:-}"
+    SQL_DATABASE="${SQL_DATABASE_NAME:-}"
+    SQL_USER="${SQL_ADMIN_USER:-}"
+fi
+
+echo "=============================================="
+echo "ArtTherapy+ Azure SQL Data Import"
+echo "=============================================="
+echo ""
+
+#==============================================================================
+# Get Connection Details
+#==============================================================================
+
+# SQL Server
+if [ -z "${SQL_SERVER:-}" ]; then
+    read -p "Enter SQL Server FQDN (e.g., server.database.windows.net): " SQL_SERVER
+fi
+
+# SQL Database
+if [ -z "${SQL_DATABASE:-}" ]; then
+    read -p "Enter SQL Database name [arttherapy-plus]: " SQL_DATABASE
+    SQL_DATABASE="${SQL_DATABASE:-arttherapy-plus}"
+fi
+
+# SQL User
+if [ -z "${SQL_USER:-}" ]; then
+    read -p "Enter SQL admin username: " SQL_USER
+fi
+
+# SQL Password
+if [ -z "${SQL_PASSWORD:-}" ]; then
+    read -sp "Enter SQL admin password: " SQL_PASSWORD
+    echo ""
+fi
+
+echo ""
+log_info "Connection: $SQL_USER@$SQL_SERVER/$SQL_DATABASE"
+echo ""
+
+#==============================================================================
+# Verify Prerequisites
+#==============================================================================
+
+# Check for exported data
+if [ ! -f "$EXPORT_DIR/users_data.json" ]; then
+    log_error "Export data not found. Run ./scripts/export-d1-data.sh first."
+    exit 1
+fi
+
+# Check for sqlcmd
+if ! command -v sqlcmd &>/dev/null; then
+    log_error "sqlcmd not found. Install Azure SQL tools:"
+    log_info "  macOS: brew install mssql-tools18"
+    log_info "  Linux: https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools"
+    exit 1
+fi
+
+# Check for jq
+if ! command -v jq &>/dev/null; then
+    log_error "jq not found. Install jq:"
+    log_info "  macOS: brew install jq"
+    log_info "  Linux: apt-get install jq"
+    exit 1
+fi
+
+# Create import directory
+mkdir -p "$IMPORT_DIR"
+
+#==============================================================================
+# Test Connection
+#==============================================================================
+log_info "Testing database connection..."
+
+if sqlcmd -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" \
+    -Q "SELECT 1" -C -b &>/dev/null; then
+    log_success "Database connection successful."
+else
+    log_error "Failed to connect to database."
+    log_info "Check your credentials and ensure SQL Server firewall allows your IP."
+    exit 1
+fi
+
+#==============================================================================
+# Generate Import SQL
+#==============================================================================
+log_info "Generating import SQL statements..."
+echo ""
+
+#------------------------------------------------------------------------------
+# Import Users
+#------------------------------------------------------------------------------
+USERS_SQL="$IMPORT_DIR/import_users.sql"
+log_info "Processing users..."
+
+cat > "$USERS_SQL" << 'HEADER'
+-- Import users from D1 export
+-- Generated by import-azure-data.sh
+
+SET NOCOUNT ON;
+BEGIN TRANSACTION;
+
+PRINT 'Importing users...';
+
+HEADER
+
+USER_COUNT=0
+while IFS= read -r user; do
+    # Extract fields with null handling
+    ID=$(echo "$user" | jq -r '.id // empty')
+    MICROSOFT_ID=$(echo "$user" | jq -r '.microsoft_id // ""')
+    EMAIL=$(echo "$user" | jq -r '.email // empty')
+    NAME=$(echo "$user" | jq -r '.name // ""')
+    AVATAR_URL=$(echo "$user" | jq -r '.avatar_url // ""')
+    PASSWORD_HASH=$(echo "$user" | jq -r '.password_hash // ""')
+    PASSWORD_SALT=$(echo "$user" | jq -r '.password_salt // ""')
+    AUTH_PROVIDER=$(echo "$user" | jq -r '.auth_provider // "email"')
+    AGE=$(echo "$user" | jq -r '.age // "NULL"')
+    SEX=$(echo "$user" | jq -r '.sex // ""')
+    GENDER=$(echo "$user" | jq -r '.gender // ""')
+    SYMPTOMS=$(echo "$user" | jq -r '.symptoms // ""')
+    LOCATION=$(echo "$user" | jq -r '.location // ""')
+    LANGUAGES=$(echo "$user" | jq -r '.languages // ""')
+    OCCUPATION=$(echo "$user" | jq -r '.occupation // ""')
+    RELATIONSHIP_STATUS=$(echo "$user" | jq -r '.relationship_status // ""')
+    PRESCRIPTIONS=$(echo "$user" | jq -r '.prescriptions // ""')
+    ACTIVITY_LEVEL=$(echo "$user" | jq -r '.activity_level // ""')
+    SETTINGS=$(echo "$user" | jq -r '.settings // "{}"')
+    CREATED_AT=$(echo "$user" | jq -r '.created_at // empty')
+    UPDATED_AT=$(echo "$user" | jq -r '.updated_at // empty')
+
+    if [ -n "$ID" ] && [ -n "$EMAIL" ]; then
+        # Escape strings
+        NAME=$(escape_sql_string "$NAME")
+        AVATAR_URL=$(escape_sql_string "$AVATAR_URL")
+        SYMPTOMS=$(escape_sql_string "$SYMPTOMS")
+        LOCATION=$(escape_sql_string "$LOCATION")
+        LANGUAGES=$(escape_sql_string "$LANGUAGES")
+        OCCUPATION=$(escape_sql_string "$OCCUPATION")
+        PRESCRIPTIONS=$(escape_sql_string "$PRESCRIPTIONS")
+        SETTINGS=$(escape_sql_string "$SETTINGS")
+
+        # Handle NULL values
+        MICROSOFT_ID_SQL=$([ -n "$MICROSOFT_ID" ] && echo "'$MICROSOFT_ID'" || echo "NULL")
+        NAME_SQL=$([ -n "$NAME" ] && echo "'$NAME'" || echo "NULL")
+        AVATAR_URL_SQL=$([ -n "$AVATAR_URL" ] && echo "'$AVATAR_URL'" || echo "NULL")
+        PASSWORD_HASH_SQL=$([ -n "$PASSWORD_HASH" ] && echo "'$PASSWORD_HASH'" || echo "NULL")
+        PASSWORD_SALT_SQL=$([ -n "$PASSWORD_SALT" ] && echo "'$PASSWORD_SALT'" || echo "NULL")
+        AGE_SQL=$([ "$AGE" != "NULL" ] && [ "$AGE" != "null" ] && [ -n "$AGE" ] && echo "$AGE" || echo "NULL")
+        SEX_SQL=$([ -n "$SEX" ] && echo "'$SEX'" || echo "NULL")
+        GENDER_SQL=$([ -n "$GENDER" ] && echo "'$GENDER'" || echo "NULL")
+        SYMPTOMS_SQL=$([ -n "$SYMPTOMS" ] && echo "'$SYMPTOMS'" || echo "NULL")
+        LOCATION_SQL=$([ -n "$LOCATION" ] && echo "'$LOCATION'" || echo "NULL")
+        LANGUAGES_SQL=$([ -n "$LANGUAGES" ] && echo "'$LANGUAGES'" || echo "NULL")
+        OCCUPATION_SQL=$([ -n "$OCCUPATION" ] && echo "'$OCCUPATION'" || echo "NULL")
+        RELATIONSHIP_STATUS_SQL=$([ -n "$RELATIONSHIP_STATUS" ] && echo "'$RELATIONSHIP_STATUS'" || echo "NULL")
+        PRESCRIPTIONS_SQL=$([ -n "$PRESCRIPTIONS" ] && echo "'$PRESCRIPTIONS'" || echo "NULL")
+        ACTIVITY_LEVEL_SQL=$([ -n "$ACTIVITY_LEVEL" ] && echo "'$ACTIVITY_LEVEL'" || echo "NULL")
+
+        cat >> "$USERS_SQL" << EOF
+INSERT INTO users (id, microsoft_id, email, name, avatar_url, password_hash, password_salt, auth_provider, age, sex, gender, symptoms, location, languages, occupation, relationship_status, prescriptions, activity_level, settings, created_at, updated_at)
+VALUES ('$ID', $MICROSOFT_ID_SQL, '$EMAIL', $NAME_SQL, $AVATAR_URL_SQL, $PASSWORD_HASH_SQL, $PASSWORD_SALT_SQL, '$AUTH_PROVIDER', $AGE_SQL, $SEX_SQL, $GENDER_SQL, $SYMPTOMS_SQL, $LOCATION_SQL, $LANGUAGES_SQL, $OCCUPATION_SQL, $RELATIONSHIP_STATUS_SQL, $PRESCRIPTIONS_SQL, $ACTIVITY_LEVEL_SQL, '$SETTINGS', '$CREATED_AT', '$UPDATED_AT');
+EOF
+        ((USER_COUNT++))
+    fi
+done < <(jq -c '.[]' "$EXPORT_DIR/users_data.json" 2>/dev/null)
+
+cat >> "$USERS_SQL" << EOF
+
+PRINT 'Imported $USER_COUNT users.';
+COMMIT TRANSACTION;
+EOF
+
+log_success "Generated $USERS_SQL ($USER_COUNT users)"
+
+#------------------------------------------------------------------------------
+# Import Gallery Items
+#------------------------------------------------------------------------------
+GALLERY_SQL="$IMPORT_DIR/import_gallery.sql"
+log_info "Processing gallery items..."
+
+cat > "$GALLERY_SQL" << 'HEADER'
+-- Import gallery_items from D1 export
+-- Generated by import-azure-data.sh
+
+SET NOCOUNT ON;
+BEGIN TRANSACTION;
+
+PRINT 'Importing gallery items...';
+
+HEADER
+
+GALLERY_COUNT=0
+while IFS= read -r item; do
+    ID=$(echo "$item" | jq -r '.id // empty')
+    USER_ID=$(echo "$item" | jq -r '.user_id // empty')
+    IMAGE_URL=$(echo "$item" | jq -r '.image_url // empty')
+    DESCRIPTION=$(echo "$item" | jq -r '.description // ""')
+    PROMPT_USED=$(echo "$item" | jq -r '.prompt_used // ""')
+    MODE=$(echo "$item" | jq -r '.mode // ""')
+    CREATED_AT=$(echo "$item" | jq -r '.created_at // empty')
+
+    if [ -n "$ID" ] && [ -n "$USER_ID" ] && [ -n "$IMAGE_URL" ]; then
+        # Escape strings
+        IMAGE_URL=$(escape_sql_string "$IMAGE_URL")
+        DESCRIPTION=$(escape_sql_string "$DESCRIPTION")
+        PROMPT_USED=$(escape_sql_string "$PROMPT_USED")
+
+        # Handle NULL values
+        PROMPT_USED_SQL=$([ -n "$PROMPT_USED" ] && echo "'$PROMPT_USED'" || echo "NULL")
+        MODE_SQL=$([ -n "$MODE" ] && echo "'$MODE'" || echo "NULL")
+
+        cat >> "$GALLERY_SQL" << EOF
+INSERT INTO gallery_items (id, user_id, image_url, description, prompt_used, mode, created_at)
+VALUES ('$ID', '$USER_ID', '$IMAGE_URL', '$DESCRIPTION', $PROMPT_USED_SQL, $MODE_SQL, '$CREATED_AT');
+EOF
+        ((GALLERY_COUNT++))
+    fi
+done < <(jq -c '.[]' "$EXPORT_DIR/gallery_items_data.json" 2>/dev/null)
+
+cat >> "$GALLERY_SQL" << EOF
+
+PRINT 'Imported $GALLERY_COUNT gallery items.';
+COMMIT TRANSACTION;
+EOF
+
+log_success "Generated $GALLERY_SQL ($GALLERY_COUNT items)"
+
+#------------------------------------------------------------------------------
+# Import Journal Entries
+#------------------------------------------------------------------------------
+JOURNAL_SQL="$IMPORT_DIR/import_journal.sql"
+log_info "Processing journal entries..."
+
+cat > "$JOURNAL_SQL" << 'HEADER'
+-- Import journal_entries from D1 export
+-- Generated by import-azure-data.sh
+
+SET NOCOUNT ON;
+BEGIN TRANSACTION;
+
+PRINT 'Importing journal entries...';
+
+HEADER
+
+JOURNAL_COUNT=0
+while IFS= read -r entry; do
+    ID=$(echo "$entry" | jq -r '.id // empty')
+    USER_ID=$(echo "$entry" | jq -r '.user_id // empty')
+    GALLERY_ITEM_ID=$(echo "$entry" | jq -r '.gallery_item_id // ""')
+    REFLECTION_QUESTIONS=$(echo "$entry" | jq -r '.reflection_questions // ""')
+    RESPONSES=$(echo "$entry" | jq -r '.responses // ""')
+    NOTES=$(echo "$entry" | jq -r '.notes // ""')
+    CREATED_AT=$(echo "$entry" | jq -r '.created_at // empty')
+    UPDATED_AT=$(echo "$entry" | jq -r '.updated_at // empty')
+
+    if [ -n "$ID" ] && [ -n "$USER_ID" ]; then
+        # Escape strings
+        REFLECTION_QUESTIONS=$(escape_sql_string "$REFLECTION_QUESTIONS")
+        RESPONSES=$(escape_sql_string "$RESPONSES")
+        NOTES=$(escape_sql_string "$NOTES")
+
+        # Handle NULL values
+        GALLERY_ITEM_ID_SQL=$([ -n "$GALLERY_ITEM_ID" ] && echo "'$GALLERY_ITEM_ID'" || echo "NULL")
+        REFLECTION_QUESTIONS_SQL=$([ -n "$REFLECTION_QUESTIONS" ] && echo "'$REFLECTION_QUESTIONS'" || echo "NULL")
+        RESPONSES_SQL=$([ -n "$RESPONSES" ] && echo "'$RESPONSES'" || echo "NULL")
+        NOTES_SQL=$([ -n "$NOTES" ] && echo "'$NOTES'" || echo "NULL")
+
+        cat >> "$JOURNAL_SQL" << EOF
+INSERT INTO journal_entries (id, user_id, gallery_item_id, reflection_questions, responses, notes, created_at, updated_at)
+VALUES ('$ID', '$USER_ID', $GALLERY_ITEM_ID_SQL, $REFLECTION_QUESTIONS_SQL, $RESPONSES_SQL, $NOTES_SQL, '$CREATED_AT', '$UPDATED_AT');
+EOF
+        ((JOURNAL_COUNT++))
+    fi
+done < <(jq -c '.[]' "$EXPORT_DIR/journal_entries_data.json" 2>/dev/null)
+
+cat >> "$JOURNAL_SQL" << EOF
+
+PRINT 'Imported $JOURNAL_COUNT journal entries.';
+COMMIT TRANSACTION;
+EOF
+
+log_success "Generated $JOURNAL_SQL ($JOURNAL_COUNT entries)"
+
+#==============================================================================
+# Execute Import (with confirmation)
+#==============================================================================
+echo ""
+echo "=============================================="
+echo "IMPORT SUMMARY"
+echo "=============================================="
+echo ""
+echo "Ready to import:"
+echo "  Users:           $USER_COUNT"
+echo "  Gallery Items:   $GALLERY_COUNT"
+echo "  Journal Entries: $JOURNAL_COUNT"
+echo ""
+echo "SQL files generated in $IMPORT_DIR/"
+echo ""
+
+read -p "Proceed with import? (yes/no): " CONFIRM
+
+if [ "$CONFIRM" != "yes" ]; then
+    log_warn "Import cancelled."
+    log_info "You can manually run the SQL files with sqlcmd."
+    exit 0
+fi
+
+echo ""
+log_info "Starting import..."
+echo ""
+
+# Import in order (users first due to foreign keys)
+log_info "Importing users..."
+if sqlcmd -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" \
+    -i "$USERS_SQL" -C -b; then
+    log_success "Users imported successfully."
+else
+    log_error "Failed to import users. Aborting."
+    exit 1
+fi
+
+log_info "Importing gallery items..."
+if sqlcmd -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" \
+    -i "$GALLERY_SQL" -C -b; then
+    log_success "Gallery items imported successfully."
+else
+    log_error "Failed to import gallery items."
+fi
+
+log_info "Importing journal entries..."
+if sqlcmd -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" \
+    -i "$JOURNAL_SQL" -C -b; then
+    log_success "Journal entries imported successfully."
+else
+    log_error "Failed to import journal entries."
+fi
+
+#==============================================================================
+# Verify Import
+#==============================================================================
+echo ""
+log_info "Verifying import..."
+
+VERIFY_OUTPUT=$(sqlcmd -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" -C -h -1 -Q "
+SELECT 'users' as tbl, COUNT(*) as cnt FROM users
+UNION ALL
+SELECT 'gallery_items', COUNT(*) FROM gallery_items
+UNION ALL
+SELECT 'journal_entries', COUNT(*) FROM journal_entries
+")
+
+echo ""
+echo "Record counts in Azure SQL:"
+echo "$VERIFY_OUTPUT"
+
+#==============================================================================
+# Summary
+#==============================================================================
+echo ""
+echo "=============================================="
+echo "IMPORT COMPLETE"
+echo "=============================================="
+echo ""
+log_success "Data migration completed successfully!"
+echo ""
+echo "=============================================="
+echo "NEXT STEPS"
+echo "=============================================="
+echo ""
+echo "1. If you need to update image URLs (R2 -> Azure Blob):"
+echo "   Run ./scripts/migrate-r2-images.sh first, then:"
+echo "   sqlcmd -S $SQL_SERVER -d $SQL_DATABASE -U $SQL_USER -P '<pass>' -Q \"UPDATE gallery_items SET image_url = REPLACE(image_url, 'https://pub-57ea486a31284eb2903893d8e0e9d516.r2.dev', 'https://arttherapyplusstore.blob.core.windows.net/images')\""
+echo ""
+echo "2. Verify the API can connect:"
+echo "   curl https://<container-app-url>/api/health"
+echo ""
+echo "3. Test authentication with an existing user."
+echo ""

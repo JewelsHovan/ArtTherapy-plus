@@ -92,3 +92,9 @@ yarn-error.log*
 
 # Working docs (temporary planning files)
 working-docs/
+.serena/
+.tdd/
+
+# Azure migration scripts - sensitive config
+scripts/.azure-config
+exports/

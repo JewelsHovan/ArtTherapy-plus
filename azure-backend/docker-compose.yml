@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8787:8787"
+    environment:
+      - NODE_ENV=development
+      - PORT=8787
+      - DATABASE_URL=${DATABASE_URL}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME:-images}
+      - AZURE_STORAGE_PUBLIC_URL=${AZURE_STORAGE_PUBLIC_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-1068db0a-2e86-4094-aa91-b55bca8ac09a}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8787/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Development service that uses hot reloading
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+    environment:
+      - NODE_ENV=development
+      - PORT=8787
+      - DATABASE_URL=${DATABASE_URL}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME:-images}
+      - AZURE_STORAGE_PUBLIC_URL=${AZURE_STORAGE_PUBLIC_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-1068db0a-2e86-4094-aa91-b55bca8ac09a}
+    command: npm run dev
+    profiles:
+      - dev
